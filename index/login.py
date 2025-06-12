@@ -2,7 +2,6 @@
 
 import reflex as rx
 from rxconfig import config
-from index.state import State
 
 def login() -> rx.Component:
     # Contenedor principal
@@ -48,8 +47,11 @@ def login() -> rx.Component:
                     ),
 
                     rx.text("Olvidé mi contraseña", size="1",),
-
-                    rx.button("Iniciar sesión", height="47px", width="25vw", border_radius="8px",),
+                    
+                    rx.link(
+                        rx.button("Iniciar sesión", height="47px", width="25vw", border_radius="8px",),
+                        href="/loggedindex",
+                    ),
 
                     rx.hstack(
                         rx.spacer(),

@@ -2,12 +2,8 @@
 
 import reflex as rx
 from rxconfig import config
-from .state import State
-from .loggedindex import loggedindex
-from .signup import signup
-from .login import login
 
-def index() -> rx.Component:
+def loggedindex() -> rx.Component:
     # Contenedor principal
     return rx.vstack(
         
@@ -18,42 +14,43 @@ def index() -> rx.Component:
             rx.box(
                 
                 rx.image(src="/logotipo.png", width="200px", height="auto"),
-                width="74vw",
+                width="100%",
 
             ),
 
-            rx.box(   
-                
-                # Botón Búsqueda
-                rx.icon_button("search", border_radius="100px", width="48px", height="48px", margin_right="10px",),
-
-                # Botón Registrarse
-                rx.link(
-                    rx.button(
-                        "Registrarse",
-                        border_radius="100px",
-                        width="135px",
-                        height="48px",
-                    ),
-                    href="/signup",
+            # Contenedor del usuario que inició sesión
+            rx.flex(
+                    
+                # Contendor de la imagen del Developer
+                rx.box(
+                    
+                    # Propiedades box de imagen
+                    height="56px",
+                    width="56px",
+                    border_radius="100px",
+                    bg="#FFFFFF",
                 ),
 
-                # Botón Iniciar sesión
-                rx.link(
-                    rx.button(
-                        rx.text("Iniciar sesión",color_scheme="violet",),
-                        bg="none",
-                        border_radius="100px",
-                        width="135px",
-                        height="48px",
-                        #border="5px solid amber",
+                # Contenedor nombre + título
+                rx.flex(
+
+                    rx.text(
+                        "[Nombre de Desarrollador]",
+                        size="4",
                     ),
-                    margin_left="10px",
-                    href="/login",
+
+                    rx.text(
+                        "[Título de Desarrollador]",
+                        size="2",
+                    ),
+                    # Propiedades flex de nombre + título
+                    direction="column",
                 ),
-                
-            # Propiedades contenedor botones Búsqueda, Registro e Inicio de sesión
-            width="26vw",
+                bg="#979797",
+                border_radius="20px",
+                spacing="3",
+                padding="20px",
+                width="36vw",
             ),
 
         # Propiedades @Header
@@ -421,7 +418,7 @@ def index() -> rx.Component:
                         bg="#FFFFFF",
                     ),
 
-                    # Contenedor de cada Desarrollador
+                    # Contenedor nombre + título
                     rx.flex(
 
                         rx.text(
@@ -592,10 +589,3 @@ def index() -> rx.Component:
         max_width="1920",
         width="100%",
     )
-
-
-app = rx.App(theme=rx.theme(accent_color="violet"))
-app.add_page(index, title="Página de inicio")
-app.add_page(loggedindex, title="Página de inicio")
-app.add_page(login, title="Iniciar sesión")
-app.add_page(signup, title="Crear nueva cuenta")
