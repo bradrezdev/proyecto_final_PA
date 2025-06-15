@@ -1,7 +1,9 @@
 """Proyecto Final | Programación Avanzada | Log in Page"""
 
 import reflex as rx
+from ..state import Login
 from rxconfig import config
+
 
 def login() -> rx.Component:
     # Contenedor principal
@@ -30,6 +32,9 @@ def login() -> rx.Component:
                         placeholder="Escribe tu correo electrónico",
                         name="email",
                         style={"border": "1px solid black"},
+                        type="email",
+                        on_change=lambda value: Login.setEmail(Login(), value),
+
                         border_radius="8px",
                         height="40px",
                         width="25vw",
@@ -41,6 +46,9 @@ def login() -> rx.Component:
                         placeholder="Escribe tu contraseña",
                         name="password",
                         style={"border": "1px solid black"},
+                        type="password",
+                        on_change=lambda value: Login.setPassword(Login(), value),
+
                         border_radius="8px",
                         height="40px",
                         width="25vw",

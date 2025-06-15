@@ -22,11 +22,11 @@ def signup() -> rx.Component:
 
                     rx.text("Únete a la red de apoyo más grande para estudiantes y programadores:"),
                     
-                    rx.text("Nombre"),
+                    rx.text("Nombre de usuario"),
 
                     rx.input(
-                        placeholder="Escribe tu nombre y apellido",
-                        name="email",
+                        placeholder="Escribe un nombre de usuario válido",
+                        name="username",
                         style={"border": "1px solid black"},
                         border_radius="8px",
                         height="40px",
@@ -37,11 +37,12 @@ def signup() -> rx.Component:
 
                     rx.input(
                         placeholder="Escribe tu correo electrónico",
-                        name="password",
+                        name="email",
                         style={"border": "1px solid black"},
+                        type="email",
                         border_radius="8px",
                         height="40px",
-                        width="25vw",
+                        width="25vw"
                     ),
 
                     rx.hstack(
@@ -53,9 +54,10 @@ def signup() -> rx.Component:
                                 placeholder="Escribe tu contraseña",
                                 name="password",
                                 style={"border": "1px solid black"},
+                                type="password",
                                 border_radius="8px",
                                 height="40px",
-                                width="100%",
+                                width="100%"
                             ),
                         ),
 
@@ -66,9 +68,10 @@ def signup() -> rx.Component:
                                 placeholder="Confirma tu contraseña",
                                 name="password",
                                 style={"border": "1px solid black"},
+                                type="password",
                                 border_radius="8px",
                                 height="40px",
-                                width="100%",
+                                width="100%"
                             ),
                         ),
 
