@@ -2,6 +2,7 @@
 
 import reflex as rx
 from rxconfig import config
+from state import State
 
 def signup() -> rx.Component:
     # Contenedor principal
@@ -66,7 +67,7 @@ def signup() -> rx.Component:
 
                             rx.input(
                                 placeholder="Confirma tu contraseña",
-                                name="password",
+                                name="confirm_password",
                                 style={"border": "1px solid black"},
                                 type="password",
                                 border_radius="8px",
@@ -97,6 +98,7 @@ def signup() -> rx.Component:
                 ),
 
                 # Propiedades @Formulario de registro.
+                on_submit=State.handle_signup,
                 padding="20%",
                 width="100%",
             ),
