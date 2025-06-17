@@ -1,7 +1,7 @@
 """Proyecto Final | Programación Avanzada"""
 
 import reflex as rx
-from .pages.loggedindex import loggedindex
+from .pages.logged_index import logged_index
 from .pages.signup import signup
 from .pages.login import login
 
@@ -594,6 +594,6 @@ def index() -> rx.Component:
 
 app = rx.App(theme=rx.theme(accent_color="violet"))
 app.add_page(index, title="Página de inicio")
-app.add_page(loggedindex, title="Página de inicio", route="/logged")
+app.add_page(logged_index, title="Página de inicio", route="/logged")
 app.add_page(login, title="Iniciar sesión", route="/login")
 app.add_page(signup, title="Crear nueva cuenta", route="sign_up")

@@ -3,7 +3,7 @@
 import reflex as rx
 from rxconfig import config
 
-def loggedindex() -> rx.Component:
+def logged_index() -> rx.Component:
     # Contenedor principal
     return rx.vstack(
         

@@ -1,7 +1,11 @@
-from project.connect_db import supabase
+from index.connect_db import supabase
 import reflex as rx
 
 class State(rx.State):
+
+    login_email: str
+    login_password: str
+
     async def handle_signup(self, form_data: dict):
         username = form_data.get("username")
         email = form_data.get("email")
@@ -21,7 +25,7 @@ class State(rx.State):
         })
 
         if result.get("error"):
-            return rx.windows_alert(f"Error: {result['error']['message']}")
+            return rx.window_alert(f"Error: {result['error']['message']}")
         
         user_id = result["data"]["user"]["id"]
 

@@ -2,7 +2,7 @@
 
 import reflex as rx
 from rxconfig import config
-from state import State
+from index.state import State
 
 def signup() -> rx.Component:
     # Contenedor principal

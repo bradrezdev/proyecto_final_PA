@@ -2,7 +2,7 @@
 
 import reflex as rx
 from rxconfig import config
-from state import AuthState
+from index.state import State
 
 def login() -> rx.Component:
     # Contenedor principal
@@ -13,11 +13,12 @@ def login() -> rx.Component:
             
             rx.image(src="/logotipo.png", width="200px", height="auto"),
 
+            """
             # Mensajes de error y éxito
             rx.cond(
-                AuthState.error_message != "",
+                State.error_message != "",
                 rx.callout(
-                    AuthState.error_message,
+                    State.error_message,
                     icon="alert_triangle",
                     color_scheme="red",
                     width="25vw",
@@ -25,14 +26,15 @@ def login() -> rx.Component:
             ),
             
             rx.cond(
-                AuthState.success_message != "",
+                State.success_message != "",
                 rx.callout(
-                    AuthState.success_message,
+                    State.success_message,
                     icon="check",
                     color_scheme="green",
                     width="25vw",
                 ),
             ),
+            """,
 
             # Formulario de inicio de sesión
             rx.form(
@@ -49,8 +51,8 @@ def login() -> rx.Component:
                     rx.text("Correo electrónico"),
                     rx.input(
                         placeholder="Escribe tu correo electrónico",
-                        value=AuthState.login_email,
-                        on_change=AuthState.set_login_email,
+                        value=State.login_email,
+                        on_change=State.set_login_email,
                         name="email",
                         type="email",
                         style={"border": "1px solid black"},
@@ -63,8 +65,8 @@ def login() -> rx.Component:
                     rx.text("Contraseña"),
                     rx.input(
                         placeholder="Escribe tu contraseña",
-                        value=AuthState.login_password,
-                        on_change=AuthState.set_login_password,
+                        value=State.login_password,
+                        on_change=State.set_login_password,
                         name="password",
                         type="password",
                         style={"border": "1px solid black"},
@@ -78,7 +80,7 @@ def login() -> rx.Component:
                     
                     rx.button(
                         rx.cond(
-                            AuthState.loading,
+                            State.loading,
                             rx.hstack(
                                 rx.spinner(size="1"),
                                 rx.text("Iniciando sesión..."),
@@ -86,8 +88,8 @@ def login() -> rx.Component:
                             ),
                             rx.text("Iniciar sesión"),
                         ),
-                        on_click=AuthState.handle_login,
-                        disabled=AuthState.loading,
+                        on_click=State.handle_login,
+                        disabled=State.loading,
                         height="47px",
                         width="25vw",
                         type="submit",
@@ -105,7 +107,7 @@ def login() -> rx.Component:
                 ),
 
                 # Propiedades del formulario
-                on_submit=AuthState.handle_login,
+                on_submit=State.handle_login,
                 reset_on_submit=False,
                 padding="20%",
                 width="100%",
