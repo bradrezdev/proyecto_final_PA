@@ -4,7 +4,6 @@ import reflex as rx
 from .pages.loggedindex import loggedindex
 from .pages.signup import signup
 from .pages.login import login
-from ..state import Login
 
 def index() -> rx.Component:
     # Contenedor principal
@@ -588,7 +587,7 @@ def index() -> rx.Component:
 
         # Propiedades contenedor principal vstack
         height="100vh",
-        max_width="1920",
+        max_width="100%",
         width="100%",
     )
 

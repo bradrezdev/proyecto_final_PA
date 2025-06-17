@@ -1,9 +1,8 @@
 """Proyecto Final | Programación Avanzada | Log in Page"""
 
 import reflex as rx
-from ..state import Login
 from rxconfig import config
-
+from state import AuthState
 
 def login() -> rx.Component:
     # Contenedor principal
@@ -14,71 +13,105 @@ def login() -> rx.Component:
             
             rx.image(src="/logotipo.png", width="200px", height="auto"),
 
-            # Formulario de inicio de sesión.
+            # Mensajes de error y éxito
+            rx.cond(
+                AuthState.error_message != "",
+                rx.callout(
+                    AuthState.error_message,
+                    icon="alert_triangle",
+                    color_scheme="red",
+                    width="25vw",
+                ),
+            ),
+            
+            rx.cond(
+                AuthState.success_message != "",
+                rx.callout(
+                    AuthState.success_message,
+                    icon="check",
+                    color_scheme="green",
+                    width="25vw",
+                ),
+            ),
+
+            # Formulario de inicio de sesión
             rx.form(
                 
-                # Inputs del formulario.
+                # Inputs del formulario
                 rx.vstack(
 
-                    rx.heading("Bienvenido de vuelta", size="8",),
+                    rx.heading("Bienvenido de vuelta", size="8"),
 
                     rx.text("Qué gusto volverte a ver. Por favor, ingresa los datos de tu cuenta:"),
                     
                     rx.spacer(),
 
                     rx.text("Correo electrónico"),
-
                     rx.input(
                         placeholder="Escribe tu correo electrónico",
+                        value=AuthState.login_email,
+                        on_change=AuthState.set_login_email,
                         name="email",
-                        style={"border": "1px solid black"},
                         type="email",
-                        on_change=lambda value: Login.setEmail(Login(), value),
-
+                        style={"border": "1px solid black"},
                         border_radius="8px",
                         height="40px",
                         width="25vw",
+                        required=True,
                     ),
 
                     rx.text("Contraseña"),
-
                     rx.input(
                         placeholder="Escribe tu contraseña",
+                        value=AuthState.login_password,
+                        on_change=AuthState.set_login_password,
                         name="password",
-                        style={"border": "1px solid black"},
                         type="password",
-                        on_change=lambda value: Login.setPassword(Login(), value),
-
+                        style={"border": "1px solid black"},
                         border_radius="8px",
                         height="40px",
                         width="25vw",
+                        required=True,
                     ),
 
-                    rx.text("Olvidé mi contraseña", size="1",),
+                    rx.link("Olvidé mi contraseña", href="/reset-password", size="1"),
                     
-                    rx.link(
-                        rx.button("Iniciar sesión", height="47px", width="25vw", border_radius="8px",),
-                        href="/loggedindex",
+                    rx.button(
+                        rx.cond(
+                            AuthState.loading,
+                            rx.hstack(
+                                rx.spinner(size="1"),
+                                rx.text("Iniciando sesión..."),
+                                spacing="2",
+                            ),
+                            rx.text("Iniciar sesión"),
+                        ),
+                        on_click=AuthState.handle_login,
+                        disabled=AuthState.loading,
+                        height="47px",
+                        width="25vw",
+                        type="submit",
+                        border_radius="8px",
                     ),
 
                     rx.hstack(
                         rx.spacer(),
-                        rx.text("¿No tienes una cuenta?",size="1"),
-                        rx.link("Crear una cuenta", href="/signup",size="1"),
+                        rx.text("¿No tienes una cuenta?", size="1"),
+                        rx.link("Crear una cuenta", href="/signup", size="1"),
                         rx.spacer(),
-                    # Propiedades de hstack "¿NO tienes una cuenta?
-                    spacing="1",
-                    width="100%",
+                        spacing="1",
+                        width="100%",
                     ),
                 ),
 
-                # Propiedades @Formulario de inicio de sesión.
+                # Propiedades del formulario
+                on_submit=AuthState.handle_login,
+                reset_on_submit=False,
                 padding="20%",
                 width="100%",
             ),
 
-            # Propiedades @Contenedor izquierdo | Formulario
-            #bg="blue",
+            # Propiedades del contenedor izquierdo
             justify="center",
             padding="4%",
             width="50%",
