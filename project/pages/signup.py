@@ -2,7 +2,8 @@
 
 import reflex as rx
 from rxconfig import config
-from index.state import State
+from ..state import Signup
+from ..models.users import Users
 
 def signup() -> rx.Component:
     # Contenedor principal
@@ -60,6 +61,7 @@ def signup() -> rx.Component:
                                 height="40px",
                                 width="100%"
                             ),
+                            width="12.25vw"
                         ),
 
                         rx.vstack(
@@ -74,8 +76,9 @@ def signup() -> rx.Component:
                                 height="40px",
                                 width="100%"
                             ),
+                            width="12.25vw"
                         ),
-
+                        spacing="2"
                     ),
 
                     rx.hstack(
@@ -84,7 +87,8 @@ def signup() -> rx.Component:
 
                     ),
 
-                    rx.button("Registrarse", height="47px", width="25vw", border_radius="8px",),
+                    rx.button("Registrarse", on_click=Signup.signup_user,
+                              height="47px", width="25vw", border_radius="8px",),
 
                     rx.hstack(
                         rx.spacer(),
@@ -98,7 +102,6 @@ def signup() -> rx.Component:
                 ),
 
                 # Propiedades @Formulario de registro.
-                on_submit=State.handle_signup,
                 padding="20%",
                 width="100%",
             ),
@@ -111,8 +114,8 @@ def signup() -> rx.Component:
         ),
 
         # Contenedor derecho | Imagen
-        rx.box(
-            bg="red",
+        rx.center(
+            rx.image(src="/image_signup.png", width="80%", height="auto", align="center"),
             width="50%",
         ),
 

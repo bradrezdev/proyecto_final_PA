@@ -1,4 +1,4 @@
-"""Proyecto Final | Programación Avanzada"""
+"""Proyecto Final | Programación Avanzada | Index sin inicio de sesión"""
 
 import reflex as rx
 from rxconfig import config

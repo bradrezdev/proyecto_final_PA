@@ -1,11 +1,11 @@
-"""Proyecto Final | Programación Avanzada"""
+"""Proyecto Final | Programación Avanzada | index"""
 
 import reflex as rx
 from .pages.logged_index import logged_index
 from .pages.signup import signup
 from .pages.login import login
 
-def index() -> rx.Component:
+def project() -> rx.Component:
     # Contenedor principal
     return rx.vstack(
         
@@ -593,7 +593,7 @@ def index() -> rx.Component:
 
 
 app = rx.App(theme=rx.theme(accent_color="violet"))
-app.add_page(index, title="Página de inicio")
+app.add_page(project, title="Página de inicio", route="/")
 app.add_page(logged_index, title="Página de inicio", route="/logged")
 app.add_page(login, title="Iniciar sesión", route="/login")
 app.add_page(signup, title="Crear nueva cuenta", route="sign_up")

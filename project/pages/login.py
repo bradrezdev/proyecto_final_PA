@@ -2,7 +2,7 @@
 
 import reflex as rx
 from rxconfig import config
-from index.state import State
+from project.state import State
 
 def login() -> rx.Component:
     # Contenedor principal
@@ -12,29 +12,6 @@ def login() -> rx.Component:
         rx.vstack(
             
             rx.image(src="/logotipo.png", width="200px", height="auto"),
-
-            """
-            # Mensajes de error y éxito
-            rx.cond(
-                State.error_message != "",
-                rx.callout(
-                    State.error_message,
-                    icon="alert_triangle",
-                    color_scheme="red",
-                    width="25vw",
-                ),
-            ),
-            
-            rx.cond(
-                State.success_message != "",
-                rx.callout(
-                    State.success_message,
-                    icon="check",
-                    color_scheme="green",
-                    width="25vw",
-                ),
-            ),
-            """,
 
             # Formulario de inicio de sesión
             rx.form(
@@ -51,8 +28,6 @@ def login() -> rx.Component:
                     rx.text("Correo electrónico"),
                     rx.input(
                         placeholder="Escribe tu correo electrónico",
-                        value=State.login_email,
-                        on_change=State.set_login_email,
                         name="email",
                         type="email",
                         style={"border": "1px solid black"},
@@ -65,8 +40,6 @@ def login() -> rx.Component:
                     rx.text("Contraseña"),
                     rx.input(
                         placeholder="Escribe tu contraseña",
-                        value=State.login_password,
-                        on_change=State.set_login_password,
                         name="password",
                         type="password",
                         style={"border": "1px solid black"},
@@ -79,17 +52,7 @@ def login() -> rx.Component:
                     rx.link("Olvidé mi contraseña", href="/reset-password", size="1"),
                     
                     rx.button(
-                        rx.cond(
-                            State.loading,
-                            rx.hstack(
-                                rx.spinner(size="1"),
-                                rx.text("Iniciando sesión..."),
-                                spacing="2",
-                            ),
-                            rx.text("Iniciar sesión"),
-                        ),
-                        on_click=State.handle_login,
-                        disabled=State.loading,
+                        rx.text("Iniciar sesión"),
                         height="47px",
                         width="25vw",
                         type="submit",
@@ -99,7 +62,7 @@ def login() -> rx.Component:
                     rx.hstack(
                         rx.spacer(),
                         rx.text("¿No tienes una cuenta?", size="1"),
-                        rx.link("Crear una cuenta", href="/signup", size="1"),
+                        rx.link("Crear una cuenta", href="/sign_up", size="1"),
                         rx.spacer(),
                         spacing="1",
                         width="100%",
@@ -107,8 +70,6 @@ def login() -> rx.Component:
                 ),
 
                 # Propiedades del formulario
-                on_submit=State.handle_login,
-                reset_on_submit=False,
                 padding="20%",
                 width="100%",
             ),
