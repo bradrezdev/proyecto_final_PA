@@ -4,6 +4,9 @@ import reflex as rx
 from .pages.logged_index import logged_index
 from .pages.signup import signup
 from .pages.login import login
+from .theme import Custom_theme
+
+
 
 def project() -> rx.Component:
     # Contenedor principal
@@ -20,32 +23,54 @@ def project() -> rx.Component:
 
             ),
 
-            rx.box(   
+            rx.box(
                 
                 # Botón Búsqueda
-                rx.icon_button("search", border_radius="100px", width="48px", height="48px", margin_right="10px",),
+                rx.icon_button(
+                    "search",
+                    bg=rx.color_mode_cond(
+                        light=Custom_theme().light_colors()["primary"],
+                        dark=Custom_theme().dark_colors()["primary"]),
+                    border_radius="100px",
+                    width="48px",
+                    height="48px",
+                    margin_right="10px",
+                ),
 
                 # Botón Registrarse
                 rx.link(
                     rx.button(
                         "Registrarse",
+                        bg=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"]
+                        ),
                         border_radius="100px",
                         width="135px",
                         height="48px",
                     ),
-                    href="/signup",
+                    href="/sign_up",
                 ),
 
                 # Botón Iniciar sesión
                 rx.link(
                     rx.button(
-                        rx.text("Iniciar sesión",color_scheme="violet",),
+                        rx.text("Iniciar sesión",color=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"]
+                        )),
                         bg="none",
                         border_radius="100px",
                         width="135px",
                         height="48px",
-                        #border="5px solid amber",
+                        border="2px solid",
+                        border_color=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"]
+                    )
                     ),
+                    
+                    # Propiedades @link del botón Iniciar sesión
                     margin_left="10px",
                     href="/login",
                 ),
@@ -120,13 +145,33 @@ def project() -> rx.Component:
 
                         # Contiene las etiquetas + nombre de quien preguntó + estrellas
                         rx.hstack(
-                        
+                            
+                            # Contenedor de la etiqueta
                             rx.container(
-                                rx.text("Python", size="2"),
+                                rx.text("Python", size="2", color="#000000"),
 
                                 #Propiedades @container de la etiqueta
-                                bg="#A7A7A7",
-                                #width="auto",
+                                bg=rx.color_mode_cond(
+                                    light=Custom_theme().light_colors()["secondary"],
+                                    dark=Custom_theme().dark_colors()["secondary"]
+                                ),
+                                # Propiedades @container de la etiqueta
+                                border_radius="8px",
+                                padding="4px 8px",
+                            ),
+
+                            # Contenedor de la etiqueta
+                            rx.container(
+                                rx.text("SQL", size="2", color="#000000"),
+
+                                #Propiedades @container de la etiqueta
+                                bg=rx.color_mode_cond(
+                                    light=Custom_theme().light_colors()["secondary"],
+                                    dark=Custom_theme().dark_colors()["secondary"]
+                                ),
+                                # Propiedades @container de la etiqueta
+                                border_radius="8px",
+                                padding="4px 8px",
                             ),
 
                             rx.link(
@@ -138,11 +183,14 @@ def project() -> rx.Component:
                             ),
                             
                             # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            #justify="between",
+                            
                         ),
 
                         # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                        bg="#E3E3E3",
+                        bg=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["background"],
+                            dark=Custom_theme().dark_colors()["background"]
+                        ),
                         border_radius="20px",
                         width="63vw",
                         padding="22px",
@@ -434,7 +482,11 @@ def project() -> rx.Component:
                         # Propiedades flex de nombre + título
                         direction="column",
                     ),
-                    bg="#979797",
+                    # Propiedades flex de imagen + nombre + título
+                    bg=rx.color_mode_cond(
+                        light=Custom_theme().light_colors()["background"],
+                        dark=Custom_theme().dark_colors()["background"]
+                    ),
                     border_radius="20px",
                     spacing="3",
                     padding="20px",
@@ -592,8 +644,12 @@ def project() -> rx.Component:
     )
 
 
-app = rx.App(theme=rx.theme(accent_color="violet"))
+app = rx.App(theme=rx.theme(
+    light=Custom_theme().light_colors(),
+    dark=Custom_theme().dark_colors(),
+    appearance="dark",
+))
 app.add_page(project, title="Página de inicio", route="/")
-app.add_page(logged_index, title="Página de inicio", route="/logged")
+app.add_page(logged_index, title="Página de inicio", route="/dashboard")
 app.add_page(login, title="Iniciar sesión", route="/login")
-app.add_page(signup, title="Crear nueva cuenta", route="sign_up")
+app.add_page(signup, title="Crear nueva cuenta", route="/sign_up")

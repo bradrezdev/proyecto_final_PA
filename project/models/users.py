@@ -5,6 +5,8 @@ import reflex as rx
 # Librería que contiene funciones extra para darle formato a la tabla
 from sqlmodel import Field # <- Permite personalizar de manera estricta las columnas
 
+import bcrypt # <- Permite encriptar la contraseña del usuario
+
 
 # Emula cómo se ve una tabla de la DB.
 class Users(rx.Model, table=True):
@@ -16,4 +18,10 @@ class Users(rx.Model, table=True):
 
     @classmethod
     def create_user(cls, id, username, user_email, user_password, user_stars=0):
-        return cls(user_id=id, username=username, email=user_email, password=user_password, total_stars=user_stars)
+
+        # Hashear la contraseña del usuario.
+        coded_password = user_password.encode()
+        hashed_password = bcrypt.hashpw(coded_password, bcrypt.gensalt())
+
+
+        return cls(user_id=id, username=username, email=user_email, password=hashed_password.decode(), total_stars=user_stars)

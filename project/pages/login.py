@@ -3,6 +3,7 @@
 import reflex as rx
 from rxconfig import config
 from project.state import State
+from ..theme import Custom_theme
 
 def login() -> rx.Component:
     # Contenedor principal
@@ -31,6 +32,10 @@ def login() -> rx.Component:
                         name="email",
                         type="email",
                         style={"border": "1px solid black"},
+                        border_color=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"]
+                        ),
                         border_radius="8px",
                         height="40px",
                         width="25vw",
@@ -43,26 +48,40 @@ def login() -> rx.Component:
                         name="password",
                         type="password",
                         style={"border": "1px solid black"},
+                        border_color=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"]
+                        ),
                         border_radius="8px",
                         height="40px",
                         width="25vw",
                         required=True,
                     ),
 
-                    rx.link("Olvidé mi contraseña", href="/reset-password", size="1"),
-                    
+                    rx.link("Olvidé mi contraseña", href="/reset-password", color=rx.color_mode_cond(
+                        light=Custom_theme().light_colors()["primary"],
+                        dark=Custom_theme().dark_colors()["primary"]
+                    ), size="1"),
+
                     rx.button(
                         rx.text("Iniciar sesión"),
                         height="47px",
                         width="25vw",
                         type="submit",
+                        bg=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"]
+                        ),
                         border_radius="8px",
                     ),
 
                     rx.hstack(
                         rx.spacer(),
                         rx.text("¿No tienes una cuenta?", size="1"),
-                        rx.link("Crear una cuenta", href="/sign_up", size="1"),
+                        rx.link("Crear una cuenta", href="/sign_up", color=rx.color_mode_cond(
+                        light=Custom_theme().light_colors()["primary"],
+                        dark=Custom_theme().dark_colors()["primary"]
+                    ), size="1"),
                         rx.spacer(),
                         spacing="1",
                         width="100%",
@@ -81,8 +100,8 @@ def login() -> rx.Component:
         ),
 
         # Contenedor derecho | Imagen
-        rx.box(
-            bg="red",
+        rx.center(
+            rx.image(src="/image_login.png", width="80%", height="auto", align="center"),
             width="50%",
         ),
 

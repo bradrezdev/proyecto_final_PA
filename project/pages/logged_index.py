@@ -2,6 +2,7 @@
 
 import reflex as rx
 from rxconfig import config
+from ..theme import Custom_theme
 
 def logged_index() -> rx.Component:
     # Contenedor principal
@@ -46,7 +47,10 @@ def logged_index() -> rx.Component:
                     # Propiedades flex de nombre + título
                     direction="column",
                 ),
-                bg="#979797",
+                bg=rx.color_mode_cond(
+                    light=Custom_theme().light_colors()["background"],
+                    dark=Custom_theme().dark_colors()["background"]
+                ),
                 border_radius="20px",
                 spacing="3",
                 padding="20px",
@@ -119,13 +123,33 @@ def logged_index() -> rx.Component:
 
                         # Contiene las etiquetas + nombre de quien preguntó + estrellas
                         rx.hstack(
-                        
+                            
+                            # Contenedor de la etiqueta
                             rx.container(
-                                rx.text("Python", size="2"),
+                                rx.text("Python", size="2", color="#000000"),
 
                                 #Propiedades @container de la etiqueta
-                                bg="#A7A7A7",
-                                #width="auto",
+                                bg=rx.color_mode_cond(
+                                    light=Custom_theme().light_colors()["secondary"],
+                                    dark=Custom_theme().dark_colors()["secondary"]
+                                ),
+                                # Propiedades @container de la etiqueta
+                                border_radius="8px",
+                                padding="4px 8px",
+                            ),
+
+                            # Contenedor de la etiqueta
+                            rx.container(
+                                rx.text("SQL", size="2", color="#000000"),
+
+                                #Propiedades @container de la etiqueta
+                                bg=rx.color_mode_cond(
+                                    light=Custom_theme().light_colors()["secondary"],
+                                    dark=Custom_theme().dark_colors()["secondary"]
+                                ),
+                                # Propiedades @container de la etiqueta
+                                border_radius="8px",
+                                padding="4px 8px",
                             ),
 
                             rx.link(
@@ -137,11 +161,14 @@ def logged_index() -> rx.Component:
                             ),
                             
                             # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            #justify="between",
+                            
                         ),
 
                         # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                        bg="#E3E3E3",
+                        bg=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["background"],
+                            dark=Custom_theme().dark_colors()["background"]
+                        ),
                         border_radius="20px",
                         width="63vw",
                         padding="22px",
