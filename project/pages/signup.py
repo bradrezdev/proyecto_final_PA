@@ -28,12 +28,13 @@ def signup() -> rx.Component:
                     rx.text("Nombre de usuario"),
 
                     rx.input(
-                        name="username",
                         placeholder="Escribe un nombre de usuario válido",
+                        type="text",
                         value=Signup.username,
                         on_change=Signup.setUsername,
+                        reset_on_submit= True,
+                        required=True,
                         style={"border": "1px solid black"},
-                        type="text",
                         border_color=rx.color_mode_cond(
                             light=Custom_theme().light_colors()["primary"],
                             dark=Custom_theme().dark_colors()["primary"]
@@ -46,12 +47,13 @@ def signup() -> rx.Component:
                     rx.text("Correo electrónico"),
 
                     rx.input(
-                        name="email",
                         placeholder="Escribe tu correo electrónico",
+                        type="email",
                         value=Signup.email,
                         on_change=Signup.setEmail,
+                        reset_on_submit= True,
+                        required=True,
                         style={"border": "1px solid black"},
-                        type="email",
                         border_color=rx.color_mode_cond(
                             light=Custom_theme().light_colors()["primary"],
                             dark=Custom_theme().dark_colors()["primary"]
@@ -67,12 +69,13 @@ def signup() -> rx.Component:
                             rx.text("Contraseña"),
 
                             rx.input(
-                                name="password",
                                 placeholder="Escribe tu contraseña",
+                                type="password",
                                 value=Signup.password,
                                 on_change=Signup.setPassword,
+                                reset_on_submit= True,
+                                required=True,
                                 style={"border": "1px solid black"},
-                                type="password",
                                 border_color=rx.color_mode_cond(
                                     light=Custom_theme().light_colors()["primary"],
                                     dark=Custom_theme().dark_colors()["primary"]
@@ -89,9 +92,12 @@ def signup() -> rx.Component:
 
                             rx.input(
                                 placeholder="Confirma tu contraseña",
-                                name="confirm_password",
-                                style={"border": "1px solid black"},
                                 type="password",
+                                value=Signup.confirm_password,
+                                on_change=Signup.setConfirmPassword,
+                                reset_on_submit= True,
+                                required=True,
+                                style={"border": "1px solid black"},
                                 border_color=rx.color_mode_cond(
                                     light=Custom_theme().light_colors()["primary"],
                                     dark=Custom_theme().dark_colors()["primary"]
@@ -138,9 +144,9 @@ def signup() -> rx.Component:
                 ),
 
                 # Propiedades @Formulario de registro.
+                on_submit=Signup.signup_user,
                 padding="20%",
                 width="100%",
-                on_submit=Signup.signup_user,
             ),
 
             # Propiedades @Contenedor izquierdo | Formulario

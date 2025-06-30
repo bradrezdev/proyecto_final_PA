@@ -3,6 +3,7 @@
 import reflex as rx
 from rxconfig import config
 from ..theme import Custom_theme
+from ..state import Login
 
 def logged_index() -> rx.Component:
     # Contenedor principal
@@ -36,7 +37,7 @@ def logged_index() -> rx.Component:
                 rx.flex(
 
                     rx.text(
-                        "[Nombre de Desarrollador]",
+                        value=Login.username,
                         size="4",
                     ),
 

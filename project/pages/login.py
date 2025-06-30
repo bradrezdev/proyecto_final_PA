@@ -2,7 +2,7 @@
 
 import reflex as rx
 from rxconfig import config
-from project.state import State
+from ..state import Login
 from ..theme import Custom_theme
 
 def login() -> rx.Component:
@@ -29,8 +29,10 @@ def login() -> rx.Component:
                     rx.text("Correo electrónico"),
                     rx.input(
                         placeholder="Escribe tu correo electrónico",
-                        name="email",
                         type="email",
+                        value=Login.email,
+                        on_change=Login.setEmail,
+                        required=True,
                         style={"border": "1px solid black"},
                         border_color=rx.color_mode_cond(
                             light=Custom_theme().light_colors()["primary"],
@@ -39,14 +41,15 @@ def login() -> rx.Component:
                         border_radius="8px",
                         height="40px",
                         width="25vw",
-                        required=True,
                     ),
 
                     rx.text("Contraseña"),
                     rx.input(
                         placeholder="Escribe tu contraseña",
-                        name="password",
                         type="password",
+                        value=Login.password,
+                        on_change=Login.setPassword,
+                        required=True,
                         style={"border": "1px solid black"},
                         border_color=rx.color_mode_cond(
                             light=Custom_theme().light_colors()["primary"],
@@ -55,7 +58,6 @@ def login() -> rx.Component:
                         border_radius="8px",
                         height="40px",
                         width="25vw",
-                        required=True,
                     ),
 
                     rx.link("Olvidé mi contraseña", href="/reset-password", color=rx.color_mode_cond(
@@ -89,6 +91,7 @@ def login() -> rx.Component:
                 ),
 
                 # Propiedades del formulario
+                on_submit=Login.login_user,
                 padding="20%",
                 width="100%",
             ),
