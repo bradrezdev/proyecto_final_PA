@@ -2,17 +2,19 @@
 
 import reflex as rx
 import bcrypt
-from typing import List
-from .models.users import Users
-from project.models.users import Users
-from project.models.titles import Titles
-from project.models.tags import Tags
-from project.models.questions import Questions
-from project.models.answers import Answers
-from project.models.question_tag import QuestionTag
-from sqlmodel import select
-from datetime import datetime
 import pytz
+import jwt
+import os
+import datetime
+from dotenv import load_dotenv
+from typing import List
+from sqlmodel import select
+from .models.users import Users
+from .models.titles import Titles
+from .models.tags import Tags
+from .models.questions import Questions
+from .models.answers import Answers
+from .models.question_tag import QuestionTag
 
 
 class State(rx.State):
@@ -75,12 +77,14 @@ class Signup(rx.State):
 
             # Redirige al usuario a la página de inicio de sesión.
             return rx.redirect("/login", replace=True)
-    
+
 class Login(rx.State):
+    username: str = ""
     email: str = ""
     password: str = ""
-    username: str = ""
-
+    auth_token: str = rx.Cookie(name="auth_token", secure=False, same_site="lax")
+    logged_user_data: dict = {}
+    
     @rx.event
     def setEmail(self, input_email):
         self.email = input_email
@@ -90,11 +94,11 @@ class Login(rx.State):
         self.password = input_password
 
     @rx.event
-    def setUsername(self, input_username):
-        self.username = input_username
-
-    @rx.event
     def login_user(self):
+
+        load_dotenv()  # Cargar las variables de entorno desde el archivo .env
+        jwt_secret_key = os.environ.get("JWT_SECRET_KEY")
+
         try:
             with rx.session() as session:
                 user = session.exec(
@@ -104,17 +108,87 @@ class Login(rx.State):
                 ).first()
 
                 if user and bcrypt.checkpw(self.password.encode(), user.password.encode()):
+
+                    # Si el usuario existe y la contraseña es correcta, crea un token JWT.
+                    login_token = {
+                        "id": user.user_id,
+                        "username": user.username,
+                        # La hora debe ir en UTC para que la librería no lo marque como expirado inmediatamente
+                        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                    }
+                    print("[DEBUG] Payload que se firmará:", login_token)
+
+                    token = jwt.encode(
+                        login_token,
+                        jwt_secret_key,  # Cambiar esto por llave secreta.
+                        algorithm="HS256",
+                    )
+                    print(f"Token JWT generado: {token}")
+
+                    if isinstance(token, bytes):
+                        token = token.decode()
+
+                    # Guarda el JWT en la cookie para que pueda leerse en otras páginas
+                    self.auth_token = token
+
                     # Si el usuario existe, redirige a la página de inicio.
                     return rx.redirect("/dashboard", replace=True)
                 else:
                     # Si el usuario no existe, redirige a la página de inicio de sesión.
-                    print("Usuario no encontrado o contraseña incorrecta.")
+                    print("Correo electrónico no encontrado o contraseña incorrecta.")
                     return rx.redirect("/login", replace=True)
                 
         except Exception as e:
             print(f"Error al iniciar sesión: {e}")
             return rx.redirect("/login", replace=True)
 
+
+    @rx.event
+    def load_logged_user(self):
+        """
+        Lee el JWT almacenado en la cookie `auth_token`, decodifica el payload y
+        rellena `self.logged_user_data`.  Se puede invocar con `on_mount` desde
+        cualquier página.
+        """
+        token = self.auth_token
+        print("[DEBUG] Cookie auth_token: ", token)
+
+        if not token or "." not in token:
+            print("[DEBUG] Token no válido o no encontrado.")
+            return
+
+        try:
+            payload = jwt.decode(
+                token,
+                os.environ["JWT_SECRET_KEY"],
+                algorithms=["HS256"],
+            )
+            print("[DEBUG] Payload decodificado: ", payload)
+        except jwt.ExpiredSignatureError:
+            print("[DEBUG] Token expirado.")
+            self.auth_token = ""
+            return
+        except Exception:
+            print("[DEBUG] Error al decodificar el token: ", token)
+            return
+
+        user_id = payload.get("id")
+        with rx.session() as session:
+            user = session.exec(
+                select(Users).where(Users.user_id == user_id)
+            ).first()
+            print("[DEBUG] Usuario encontrado: ", user)
+
+        if user:
+            self.logged_user_data = {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email,
+                "total_stars": user.total_stars,
+                "title": user.get_title(),
+            }
+            print("[DEBUG] Datos del usuario cargados: ", self.logged_user_data)
+        
 class SearchUIState(rx.State):
     show_search_box: bool = False
 
@@ -124,33 +198,257 @@ class SearchUIState(rx.State):
 
 class SearchState(rx.State):
     show_search: bool = False
+    search_term: str = ""
 
     @rx.event
     def toggle_search(self):
         self.show_search = not self.show_search
+        if not self.show_search:
+            self.search_term = ""
 
 class QuestionsState(rx.State):
+    # --- Utilidad: obtener el user_id a partir del JWT ---
+    def _get_current_user_id(self) -> int | None:
+        """
+        Devuelve el `user_id` del usuario actualmente autenticado
+        leyendo y decodificando la cookie `auth_token`.
+        Si el token no existe, está vencido o es inválido, retorna None.
+        """
+        token = rx.Cookie(name="auth_token", secure=False, same_site="lax")
+        if not token or "." not in token:
+            return None
+
+        try:
+            payload = jwt.decode(
+                token,
+                os.environ["JWT_SECRET_KEY"],
+                algorithms=["HS256"],
+            )
+            return payload.get("id")
+        except jwt.ExpiredSignatureError:
+            # Token expirado
+            return None
+        except Exception:
+            # Token malformado u otro error
+            return None
+    # ==========================
+    # --- Estado general de preguntas y formulario ---
+    # ==========================
+    # Pregunta nueva (formulario)
+    title: str = ""
+    body: str = ""
+    tags_input: str = ""
+    
+    # Estado de carga y lista de preguntas
+    is_loading: bool = False
     questions: list[Questions] = []
 
+    # ==========================
+    # --- Estado de detalle de pregunta seleccionada ---
+    # ==========================
+    selected_question_id: int | None = None  # Cambiar question_id por selected_question_id
+    question: Questions | None = None        # Objeto pregunta seleccionada
+    question_username: str = ""       # Agregar campo separado para username
+    tags: list[Tags] = []             # Lista de tags de la pregunta seleccionada
+    answers: list[Answers] = []       # Respuestas de la pregunta seleccionada
+
+    # Respuesta nueva (formulario)
+    answer_body: str = ""
+
+    # ==========================
+    # --- Utilidades privadas ---
+    # ==========================
+    def _format_datetime(self, dt):
+        """Convierte un datetime (con o sin zona) a hora local CDMX."""
+        import pytz, datetime
+        local_tz = pytz.timezone("America/Mexico_City")
+        if isinstance(dt, str):
+            utc_dt = datetime.datetime.fromisoformat(dt)
+        else:
+            utc_dt = dt
+        if utc_dt.tzinfo is None:
+            utc_dt = utc_dt.replace(tzinfo=pytz.utc)
+        return utc_dt.astimezone(local_tz)
+
+    # ==========================
+    # --- Setters para formularios ---
+    # ==========================
+    @rx.event
+    def setTitle(self, input_title: str):
+        """Actualiza el título de la pregunta nueva."""
+        self.title = input_title
+
+    @rx.event
+    def setBody(self, input_body: str):
+        """Actualiza el cuerpo de la pregunta nueva."""
+        self.body = input_body
+
+    @rx.event
+    def setTagsInput(self, input_tags: str):
+        """Actualiza el input de etiquetas para pregunta nueva."""
+        self.tags_input = input_tags
+
+    @rx.event
+    def set_answer_body(self, body: str):
+        """Actualiza el cuerpo de la respuesta a publicar."""
+        self.answer_body = body
+
+    # ==========================
+    # --- Publicar nueva pregunta ---
+    # ==========================
+    @rx.event
+    def publish_question(self):
+        """Guarda una nueva pregunta con sus tags, limpia el formulario y redirige al dashboard."""
+        with rx.session() as session:
+            # 1. Crear la pregunta
+            user_id = None  # Aquí deberías obtener el user_id del usuario logueado
+
+            new_question = Questions(
+                title=self.title,
+                body=self.body,
+                user_id=self.user_id,
+            )
+            session.add(new_question)
+            session.commit()
+            print(f"Pregunta publicada: {new_question.title}")
+
+            # 2. Procesar etiquetas (tags)
+            tags = [t.strip() for t in self.tags_input.split(",") if t.strip()]
+            for name in tags:
+                tag = session.exec(
+                    select(Tags).where(Tags.tag_name == name)
+                ).first()
+                if not tag:
+                    tag = Tags(tag_name=name)
+                    session.add(tag)
+                    session.commit()
+                # Relacionar pregunta y etiqueta
+                question_tag = QuestionTag(
+                    question_id=new_question.question_id,
+                    tag_id=tag.tag_id
+                )
+                session.add(question_tag)
+            session.commit()
+
+            # 3. Limpiar campos y redirigir
+            self.title = ""
+            self.body = ""
+            self.tags_input = ""
+            return rx.redirect("/dashboard", replace=True)
+
+    # ==========================
+    # --- Cargar todas las preguntas (lista general) ---
+    # ==========================
     @rx.event
     def load_questions(self):
+        """Carga todas las preguntas de la base de datos (con fechas locales)."""
+        self.is_loading = True
         with rx.session() as session:
             results = session.exec(select(Questions)).all()
-            local_tz = pytz.timezone("America/Mexico_City")  # Pon aquí tu zona local
-
+            # Ajustar fechas
             for question in results:
-                # Si tu fecha es string, conviértela primero a datetime
-                if isinstance(question.created_at, str):
-                    utc_dt = datetime.fromisoformat(question.created_at)
-                else:
-                    utc_dt = question.created_at
+                question.created_at = self._format_datetime(question.created_at)
+            self.questions = list(results)
+            self.is_loading = False
 
-                # Ponle la zona UTC si aún no la tiene
-                if utc_dt.tzinfo is None:
-                    utc_dt = utc_dt.replace(tzinfo=pytz.utc)
+    # ==========================
+    # --- Buscar preguntas ---
+    # ==========================
+    @rx.event
+    def search_questions(self, term: str):
+        """Busca preguntas que coincidan con el término en título o cuerpo."""
+        with rx.session() as session:
+            results = session.exec(select(Questions)).all()
+            term_lower = term.lower()
+            filtered = []
+            for question in results:
+                if term_lower in question.title.lower() or term_lower in question.body.lower():
+                    question.created_at = self._format_datetime(question.created_at)
+                    filtered.append(question)
+            self.questions = filtered
 
-                # Convierte a hora local
-                local_dt = utc_dt.astimezone(local_tz)
-                question.created_at = local_dt.isoformat()
+    # ==========================
+    # --- Cargar detalle de pregunta (con tags y respuestas) ---
+    # ==========================
+# --- Cargar detalle de pregunta (sin argumento) ---
+    @rx.event
+    def load_question_detail(self):
+        """Carga el detalle de la pregunta cuyo ID viene en la URL."""
+        question_id = self.router.page.params.get("question_id")
+        if question_id:
+            self.load_question(int(question_id))
 
-            self.questions = results
+    # ==========================
+    # --- Cargar detalle de pregunta (con tags y respuestas) ---
+    # ==========================
+    @rx.event
+    def load_question(self, question_id: int):
+        """Carga una pregunta por ID junto con sus tags y respuestas."""
+        with rx.session() as session:
+            q = session.exec(
+                select(Questions).where(Questions.question_id == question_id)
+            ).first()
+            if q:
+                q.created_at = self._format_datetime(q.created_at)
+                # --- Buscar el username ---
+                user = session.exec(select(Users).where(Users.user_id == q.user_id)).first()
+                self.question_username = user.username if user else "Desconocido"
+                # --- Guardar el objeto Questions directamente ---
+                self.question = q
+                self.selected_question_id = question_id
+            else:
+                self.question = None
+                self.question_username = ""
+
+            # Buscar respuestas asociadas
+            answers = session.exec(
+                select(Answers).where(Answers.question_id == question_id)
+            ).all()
+            # Ajustar fechas de respuestas si tienen fecha
+            for answer in answers:
+                if hasattr(answer, "created_at"):
+                    answer.created_at = self._format_datetime(answer.created_at)
+            self.answers = list(answers)
+
+    # ==========================
+    # --- Publicar respuesta ---
+    # ==========================
+    @rx.event
+    def post_answer(self):
+        # 1. Debe haber texto y pregunta seleccionada
+        if not self.answer_body or not self.selected_question_id:
+            return
+
+        # 2. Intenta obtener el user_id directamente del Login.logged_user_data
+        login_data = Login.logged_user_data
+        try:
+            user_id = login_data.get("user_id", None)
+        except Exception:
+            user_id = None
+
+        if not user_id:
+            print(f"[DEBUG] No hay user_id en Login.logged_user_data: {login_data}")
+            return rx.redirect("/login", replace=True)
+
+        # 3. Guarda la respuesta
+        with rx.session() as session:
+            new_answer = Answers(
+                body=self.answer_body,
+                question_id=self.selected_question_id,
+                user_id=user_id,
+                created_at=datetime.datetime.now(),
+            )
+            session.add(new_answer)
+            session.commit()
+
+            # Limpia textarea y recarga respuestas
+            self.answer_body = ""
+            answers = session.exec(
+                select(Answers).where(
+                    Answers.question_id == self.selected_question_id
+                )
+            ).all()
+            for answer in answers:
+                if hasattr(answer, "created_at"):
+                    answer.created_at = self._format_datetime(answer.created_at)
+            self.answers = list(answers)

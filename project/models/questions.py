@@ -15,5 +15,5 @@ class Questions(rx.Model, table=True):
     created_at: datetime = Field(
     default_factory=lambda: datetime.now(timezone.utc),
     sa_column_kwargs={"server_default": func.now()},
-)
+    )
     # La relación de tags se hace con la tabla question_tag (no aquí como texto)

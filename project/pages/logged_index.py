@@ -4,11 +4,14 @@ import reflex as rx
 from rxconfig import config
 from ..theme import Custom_theme
 from ..state import Login
+from ..state import SearchState
+from ..state import SearchUIState
+from ..state import QuestionsState
 
 def logged_index() -> rx.Component:
     # Contenedor principal
     return rx.vstack(
-        
+
         # Contenedor Header | Logo + Search, Login, Signup
         rx.flex(
             
@@ -37,12 +40,12 @@ def logged_index() -> rx.Component:
                 rx.flex(
 
                     rx.text(
-                        value=Login.username,
+                            Login.logged_user_data.get("username"),
                         size="4",
                     ),
 
                     rx.text(
-                        "[Título de Desarrollador]",
+                            Login.logged_user_data.get("title"),
                         size="2",
                     ),
                     # Propiedades flex de nombre + título
@@ -68,7 +71,7 @@ def logged_index() -> rx.Component:
         rx.flex(
 
             rx.box(
-                rx.heading("Última preguntas"),
+                rx.heading("Últimas preguntas"),
                 width="63vw",
                 ),
 
@@ -87,532 +90,171 @@ def logged_index() -> rx.Component:
 
         # Contenedor Main | Preguntas + Top Developers
         rx.hstack(
-            
-            # Contenedor vstak de preguntas
-            rx.vstack(
-
-                    # Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                    rx.flex(
-
-                        # Contiene el título de la pregunta + hora de creación
-                        rx.hstack(
-                        
-                            rx.heading(
-                                "[Título de pregunta]",
-                                size="5",
-
-                                #Propiedades @heading del título de pregunta
+                rx.flex(
+                    rx.foreach(
+                        QuestionsState.questions,
+                        lambda question: rx.flex(
+                            rx.hstack(
+                                rx.heading(
+                                    question.title,  # Cambiar question["title"] por question.title
+                                    size="5",
+                                ),
+                                rx.moment(
+                                    question.created_at, from_now=True,  # Cambiar question["created_at"] por question.created_at
+                                    size="1",
+                                ),
+                                justify="between",
                             ),
-
                             rx.text(
-
-                                "Hace 38 minutos",
-                                size="1",
-
-                                # Propiedades @text de tiempo de creación
+                                question.body[:200] + "..."
                             ),
-                            
-                            # Propiedades @hstack de título de pregunta + hora de creación
-                            justify="between",
+                            bg=rx.color_mode_cond(
+                                light=Custom_theme().light_colors()["background"],
+                                dark=Custom_theme().dark_colors()["background"]
+                            ),
+                            border_radius="20px",
+                            width="63vw",
+                            padding="22px",
+                            direction="column",
+                            spacing="2",
+                            on_click=lambda: rx.redirect(f"/question/{question.question_id}"),  # Usar question.question_id
+                        )
+                    ),
+                    direction="column",
+                    width="63vw",
+                    spacing="4",
+                ),
+                rx.flex(
+                    rx.flex(
+                        rx.box(
+                            height="56px",
+                            width="56px",
+                            border_radius="100px",
+                            bg="#FFFFFF",
                         ),
-
-                        rx.text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum sit amet felis in lobortis. Sed sed ipsum arcu. Donec sit amet gravida nulla. In sodales magna erat, at scelerisque magna suscipit et. Donec eu nulla nec lorem dictum maximus eget eget orci...",
-                            
-                            # Propiedades @text de pregunta
-                        ),
-
-                        # Contiene las etiquetas + nombre de quien preguntó + estrellas
-                        rx.hstack(
-                            
-                            # Contenedor de la etiqueta
-                            rx.container(
-                                rx.text("Python", size="2", color="#000000"),
-
-                                #Propiedades @container de la etiqueta
-                                bg=rx.color_mode_cond(
-                                    light=Custom_theme().light_colors()["secondary"],
-                                    dark=Custom_theme().dark_colors()["secondary"]
-                                ),
-                                # Propiedades @container de la etiqueta
-                                border_radius="8px",
-                                padding="4px 8px",
+                        rx.flex(
+                            rx.text(
+                                "[Nombre de Desarrollador]",
+                                size="4",
                             ),
-
-                            # Contenedor de la etiqueta
-                            rx.container(
-                                rx.text("SQL", size="2", color="#000000"),
-
-                                #Propiedades @container de la etiqueta
-                                bg=rx.color_mode_cond(
-                                    light=Custom_theme().light_colors()["secondary"],
-                                    dark=Custom_theme().dark_colors()["secondary"]
-                                ),
-                                # Propiedades @container de la etiqueta
-                                border_radius="8px",
-                                padding="4px 8px",
-                            ),
-
-                            rx.link(
-
-                                "[Nombre de usuario que pregunta]",
+                            rx.text(
+                                "[Título de Desarrollador]",
                                 size="2",
-
-                                # Propiedades @link del usuario quien pregunta
                             ),
-                            
-                            # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            
+                            direction="column",
                         ),
-
-                        # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
                         bg=rx.color_mode_cond(
                             light=Custom_theme().light_colors()["background"],
                             dark=Custom_theme().dark_colors()["background"]
                         ),
                         border_radius="20px",
-                        width="63vw",
-                        padding="22px",
-                        direction="column",
-                        spacing="2",
+                        spacing="3",
+                        padding="20px",
                     ),
-
                     rx.flex(
-
-                        # Contiene el título de la pregunta + hora de creación
-                        rx.hstack(
-                        
-                            rx.heading(
-                                "[Título de pregunta]",
-                                size="5",
-
-                                #Propiedades @heading del título de pregunta
-                            ),
-
+                        rx.box(
+                            height="56px",
+                            width="56px",
+                            border_radius="100px",
+                            bg="#FFFFFF",
+                        ),
+                        rx.flex(
                             rx.text(
-
-                                "Hace 38 minutos",
-                                size="1",
-
-                                # Propiedades @text de tiempo de creación
+                                "[Nombre de Desarrollador]",
+                                size="4",
                             ),
-                            
-                            # Propiedades @hstack de título de pregunta + hora de creación
-                            justify="between",
-                        ),
-
-                        rx.text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum sit amet felis in lobortis. Sed sed ipsum arcu. Donec sit amet gravida nulla. In sodales magna erat, at scelerisque magna suscipit et. Donec eu nulla nec lorem dictum maximus eget eget orci...",
-                            
-                            # Propiedades @text de pregunta
-                        ),
-
-                        # Contiene las etiquetas + nombre de quien preguntó + estrellas
-                        rx.hstack(
-                        
-                            rx.container(
-                                rx.text("Python", size="2"),
-
-                                #Propiedades @container de la etiqueta
-                                bg="#A7A7A7",
-                                #width="auto",
-                            ),
-
-                            rx.link(
-
-                                "[Nombre de usuario que pregunta]",
+                            rx.text(
+                                "[Título de Desarrollador]",
                                 size="2",
-
-                                # Propiedades @link del usuario quien pregunta
                             ),
-                            
-                            # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            #justify="between",
+                            direction="column",
                         ),
-
-                        # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                        bg="#E3E3E3",
+                        bg="#979797",
                         border_radius="20px",
-                        width="63vw",
-                        padding="22px",
-                        direction="column",
-                        spacing="2",
+                        spacing="3",
+                        padding="20px",
                     ),
-
                     rx.flex(
-
-                        # Contiene el título de la pregunta + hora de creación
-                        rx.hstack(
-                        
-                            rx.heading(
-                                "[Título de pregunta]",
-                                size="5",
-
-                                #Propiedades @heading del título de pregunta
-                            ),
-
+                        rx.box(
+                            height="56px",
+                            width="56px",
+                            border_radius="100px",
+                            bg="#FFFFFF",
+                        ),
+                        rx.flex(
                             rx.text(
-
-                                "Hace 38 minutos",
-                                size="1",
-
-                                # Propiedades @text de tiempo de creación
+                                "[Nombre de Desarrollador]",
+                                size="4",
                             ),
-                            
-                            # Propiedades @hstack de título de pregunta + hora de creación
-                            justify="between",
-                        ),
-
-                        rx.text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum sit amet felis in lobortis. Sed sed ipsum arcu. Donec sit amet gravida nulla. In sodales magna erat, at scelerisque magna suscipit et. Donec eu nulla nec lorem dictum maximus eget eget orci...",
-                            
-                            # Propiedades @text de pregunta
-                        ),
-
-                        # Contiene las etiquetas + nombre de quien preguntó + estrellas
-                        rx.hstack(
-                        
-                            rx.container(
-                                rx.text("Python", size="2"),
-
-                                #Propiedades @container de la etiqueta
-                                bg="#A7A7A7",
-                                #width="auto",
-                            ),
-
-                            rx.link(
-
-                                "[Nombre de usuario que pregunta]",
+                            rx.text(
+                                "[Título de Desarrollador]",
                                 size="2",
-
-                                # Propiedades @link del usuario quien pregunta
                             ),
-                            
-                            # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            #justify="between",
+                            direction="column",
                         ),
-
-                        # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                        bg="#E3E3E3",
+                        bg="#979797",
                         border_radius="20px",
-                        width="63vw",
-                        padding="22px",
-                        direction="column",
-                        spacing="2",
+                        spacing="3",
+                        padding="20px",
                     ),
-
                     rx.flex(
-
-                        # Contiene el título de la pregunta + hora de creación
-                        rx.hstack(
-                        
-                            rx.heading(
-                                "[Título de pregunta]",
-                                size="5",
-
-                                #Propiedades @heading del título de pregunta
-                            ),
-
+                        rx.box(
+                            height="56px",
+                            width="56px",
+                            border_radius="100px",
+                            bg="#FFFFFF",
+                        ),
+                        rx.flex(
                             rx.text(
-
-                                "Hace 38 minutos",
-                                size="1",
-
-                                # Propiedades @text de tiempo de creación
+                                "[Nombre de Desarrollador]",
+                                size="4",
                             ),
-                            
-                            # Propiedades @hstack de título de pregunta + hora de creación
-                            justify="between",
-                        ),
-
-                        rx.text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum sit amet felis in lobortis. Sed sed ipsum arcu. Donec sit amet gravida nulla. In sodales magna erat, at scelerisque magna suscipit et. Donec eu nulla nec lorem dictum maximus eget eget orci...",
-                            
-                            # Propiedades @text de pregunta
-                        ),
-
-                        # Contiene las etiquetas + nombre de quien preguntó + estrellas
-                        rx.hstack(
-                        
-                            rx.container(
-                                rx.text("Python", size="2"),
-
-                                #Propiedades @container de la etiqueta
-                                bg="#A7A7A7",
-                                #width="auto",
-                            ),
-
-                            rx.link(
-
-                                "[Nombre de usuario que pregunta]",
+                            rx.text(
+                                "[Título de Desarrollador]",
                                 size="2",
-
-                                # Propiedades @link del usuario quien pregunta
                             ),
-                            
-                            # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            #justify="between",
+                            direction="column",
                         ),
-
-                        # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                        bg="#E3E3E3",
+                        bg="#979797",
                         border_radius="20px",
-                        width="63vw",
-                        padding="22px",
-                        direction="column",
-                        spacing="2",
+                        spacing="3",
+                        padding="20px",
                     ),
-
                     rx.flex(
-
-                        # Contiene el título de la pregunta + hora de creación
-                        rx.hstack(
-                        
-                            rx.heading(
-                                "[Título de pregunta]",
-                                size="5",
-
-                                #Propiedades @heading del título de pregunta
-                            ),
-
+                        rx.box(
+                            height="56px",
+                            width="56px",
+                            border_radius="100px",
+                            bg="#FFFFFF",
+                        ),
+                        rx.flex(
                             rx.text(
-
-                                "Hace 38 minutos",
-                                size="1",
-
-                                # Propiedades @text de tiempo de creación
+                                "[Nombre de Desarrollador]",
+                                size="4",
                             ),
-                            
-                            # Propiedades @hstack de título de pregunta + hora de creación
-                            justify="between",
-                        ),
-
-                        rx.text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum sit amet felis in lobortis. Sed sed ipsum arcu. Donec sit amet gravida nulla. In sodales magna erat, at scelerisque magna suscipit et. Donec eu nulla nec lorem dictum maximus eget eget orci...",
-                            
-                            # Propiedades @text de pregunta
-                        ),
-
-                        # Contiene las etiquetas + nombre de quien preguntó + estrellas
-                        rx.hstack(
-                        
-                            rx.container(
-                                rx.text("Python", size="2"),
-
-                                #Propiedades @container de la etiqueta
-                                bg="#A7A7A7",
-                                #width="auto",
-                            ),
-
-                            rx.link(
-
-                                "[Nombre de usuario que pregunta]",
+                            rx.text(
+                                "[Título de Desarrollador]",
                                 size="2",
-
-                                # Propiedades @link del usuario quien pregunta
                             ),
-                            
-                            # Propiedades @Contiene las etiquetas + nombre de quien preguntó + estrellas
-                            #justify="between",
+                            direction="column",
                         ),
-
-                        # Propiedades @Contiene título, texto de la pregunta, etc. envuelto en un contenedor
-                        bg="#E3E3E3",
+                        bg="#979797",
                         border_radius="20px",
-                        width="63vw",
-                        padding="22px",
-                        direction="column",
-                        spacing="2",
+                        spacing="3",
+                        padding="20px",
                     ),
-                    
-                # Propiedades vstack de los contenedores de preguntas
-                width="63vw",
-                spacing="4",
+                    direction="column",
+                    spacing="4",
+                    width="27vw",
+                ),
+                justify="between",
+                padding_left="4%",
+                padding_right="4%",
+                width="100%",
             ),
-
-            # Contenedor de los contenedores de los Top Developers
-            rx.flex(
-                
-                # Contiene todos los elementos del Developer (imagen, nombre, título, estrellas)
-                rx.flex(
-                    
-                    # Contendor de la imagen del Developer
-                    rx.box(
-                        
-                        # Propiedades box de imagen
-                        height="56px",
-                        width="56px",
-                        border_radius="100px",
-                        bg="#FFFFFF",
-                    ),
-
-                    # Contenedor nombre + título
-                    rx.flex(
-
-                        rx.text(
-                            "[Nombre de Desarrollador]",
-                            size="4",
-                        ),
-
-                        rx.text(
-                            "[Título de Desarrollador]",
-                            size="2",
-                        ),
-                        # Propiedades flex de nombre + título
-                        direction="column",
-                    ),
-                    bg="#979797",
-                    border_radius="20px",
-                    spacing="3",
-                    padding="20px",
-                ),
-
-                rx.flex(
-                    
-                    # Contendor de la imagen del Developer
-                    rx.box(
-                        
-                        # Propiedades box de imagen
-                        height="56px",
-                        width="56px",
-                        border_radius="100px",
-                        bg="#FFFFFF",
-                    ),
-
-                    # Contenedor de cada Desarrollador
-                    rx.flex(
-
-                        rx.text(
-                            "[Nombre de Desarrollador]",
-                            size="4",
-                        ),
-
-                        rx.text(
-                            "[Título de Desarrollador]",
-                            size="2",
-                        ),
-                        # Propiedades flex de nombre + título
-                        direction="column",
-                    ),
-                    bg="#979797",
-                    border_radius="20px",
-                    spacing="3",
-                    padding="20px",
-                ),
-
-                rx.flex(
-                    
-                    # Contendor de la imagen del Developer
-                    rx.box(
-                        
-                        # Propiedades box de imagen
-                        height="56px",
-                        width="56px",
-                        border_radius="100px",
-                        bg="#FFFFFF",
-                    ),
-
-                    # Contenedor de cada Desarrollador
-                    rx.flex(
-
-                        rx.text(
-                            "[Nombre de Desarrollador]",
-                            size="4",
-                        ),
-
-                        rx.text(
-                            "[Título de Desarrollador]",
-                            size="2",
-                        ),
-                        # Propiedades flex de nombre + título
-                        direction="column",
-                    ),
-                    bg="#979797",
-                    border_radius="20px",
-                    spacing="3",
-                    padding="20px",
-                ),
-
-                rx.flex(
-                    
-                    # Contendor de la imagen del Developer
-                    rx.box(
-                        
-                        # Propiedades box de imagen
-                        height="56px",
-                        width="56px",
-                        border_radius="100px",
-                        bg="#FFFFFF",
-                    ),
-
-                    # Contenedor de cada Desarrollador
-                    rx.flex(
-
-                        rx.text(
-                            "[Nombre de Desarrollador]",
-                            size="4",
-                        ),
-
-                        rx.text(
-                            "[Título de Desarrollador]",
-                            size="2",
-                        ),
-                        # Propiedades flex de nombre + título
-                        direction="column",
-                    ),
-                    bg="#979797",
-                    border_radius="20px",
-                    spacing="3",
-                    padding="20px",
-                ),
-
-                rx.flex(
-                    
-                    # Contendor de la imagen del Developer
-                    rx.box(
-                        
-                        # Propiedades box de imagen
-                        height="56px",
-                        width="56px",
-                        border_radius="100px",
-                        bg="#FFFFFF",
-                    ),
-
-                    # Contenedor de cada Desarrollador
-                    rx.flex(
-
-                        rx.text(
-                            "[Nombre de Desarrollador]",
-                            size="4",
-                        ),
-
-                        rx.text(
-                            "[Título de Desarrollador]",
-                            size="2",
-                        ),
-                        # Propiedades flex de nombre + título
-                        direction="column",
-                    ),
-                    bg="#979797",
-                    border_radius="20px",
-                    spacing="3",
-                    padding="20px",
-                ),
-
-                # Propiedades de @Contenedor de los contenedores de los Top Developers
-                direction="column",
-                spacing="4",
-                width="27vw",
-            ),
-        
-        # Propiedades @Contenedor Main | Preguntas + Top Developers
-        justify="between",
-        padding_left="4%",
-        padding_right="4%",
-        width="100%",
-        ),
 
         # Propiedades contenedor principal vstack
+        on_mount=[Login.load_logged_user],
         height="100vh",
         max_width="1920",
         width="100%",
