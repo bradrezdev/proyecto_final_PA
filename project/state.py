@@ -50,7 +50,7 @@ class Signup(rx.State):
                 )
             ).first()
         return signed_up_user
-    
+
     @rx.event
     def signup_user(self):
         signed_up_user = self.search_user()
@@ -60,22 +60,17 @@ class Signup(rx.State):
         elif signed_up_user:
             return print("El usuario ya existe.")
         else:
-            # Si el usuario no existe, crea un nuevo usuario.
             new_user = Users.create_user(
                 id=None,
                 username=self.username,
                 user_email=self.email,
                 user_password=self.password
             )
-            
-            # Abre una sesión para interactuar con la base de datos y la cierra al finalizar.
+
             with rx.session() as session:
-                # Crea el usuario nuevo en la base de datos.
                 session.add(new_user)
-                # Guarda los cambios en la base de datos.
                 session.commit()
 
-            # Redirige al usuario a la página de inicio de sesión.
             return rx.redirect("/login", replace=True)
 
 class Login(rx.State):
@@ -84,7 +79,7 @@ class Login(rx.State):
     password: str = ""
     auth_token: str = rx.Cookie(name="auth_token", secure=False, same_site="lax")
     logged_user_data: dict = {}
-    
+
     @rx.event
     def setEmail(self, input_email):
         self.email = input_email
@@ -95,8 +90,7 @@ class Login(rx.State):
 
     @rx.event
     def login_user(self):
-
-        load_dotenv()  # Cargar las variables de entorno desde el archivo .env
+        load_dotenv()
         jwt_secret_key = os.environ.get("JWT_SECRET_KEY")
 
         try:
@@ -108,53 +102,36 @@ class Login(rx.State):
                 ).first()
 
                 if user and bcrypt.checkpw(self.password.encode(), user.password.encode()):
-
-                    # Si el usuario existe y la contraseña es correcta, crea un token JWT.
                     login_token = {
                         "id": user.user_id,
                         "username": user.username,
-                        # La hora debe ir en UTC para que la librería no lo marque como expirado inmediatamente
                         "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
                     }
-                    print("[DEBUG] Payload que se firmará:", login_token)
 
                     token = jwt.encode(
                         login_token,
-                        jwt_secret_key,  # Cambiar esto por llave secreta.
+                        jwt_secret_key,
                         algorithm="HS256",
                     )
-                    print(f"Token JWT generado: {token}")
 
                     if isinstance(token, bytes):
                         token = token.decode()
 
-                    # Guarda el JWT en la cookie para que pueda leerse en otras páginas
                     self.auth_token = token
 
-                    # Si el usuario existe, redirige a la página de inicio.
                     return rx.redirect("/dashboard", replace=True)
                 else:
-                    # Si el usuario no existe, redirige a la página de inicio de sesión.
                     print("Correo electrónico no encontrado o contraseña incorrecta.")
                     return rx.redirect("/login", replace=True)
-                
+
         except Exception as e:
             print(f"Error al iniciar sesión: {e}")
             return rx.redirect("/login", replace=True)
 
-
     @rx.event
     def load_logged_user(self):
-        """
-        Lee el JWT almacenado en la cookie `auth_token`, decodifica el payload y
-        rellena `self.logged_user_data`.  Se puede invocar con `on_mount` desde
-        cualquier página.
-        """
         token = self.auth_token
-        print("[DEBUG] Cookie auth_token: ", token)
-
         if not token or "." not in token:
-            print("[DEBUG] Token no válido o no encontrado.")
             return
 
         try:
@@ -163,13 +140,10 @@ class Login(rx.State):
                 os.environ["JWT_SECRET_KEY"],
                 algorithms=["HS256"],
             )
-            print("[DEBUG] Payload decodificado: ", payload)
         except jwt.ExpiredSignatureError:
-            print("[DEBUG] Token expirado.")
             self.auth_token = ""
             return
         except Exception:
-            print("[DEBUG] Error al decodificar el token: ", token)
             return
 
         user_id = payload.get("id")
@@ -177,7 +151,6 @@ class Login(rx.State):
             user = session.exec(
                 select(Users).where(Users.user_id == user_id)
             ).first()
-            print("[DEBUG] Usuario encontrado: ", user)
 
         if user:
             self.logged_user_data = {
@@ -187,7 +160,6 @@ class Login(rx.State):
                 "total_stars": user.total_stars,
                 "title": user.get_title(),
             }
-            print("[DEBUG] Datos del usuario cargados: ", self.logged_user_data)
         
 class SearchUIState(rx.State):
     show_search_box: bool = False
@@ -207,30 +179,28 @@ class SearchState(rx.State):
             self.search_term = ""
 
 class QuestionsState(rx.State):
-    # --- Utilidad: obtener el user_id a partir del JWT ---
-    def _get_current_user_id(self) -> int | None:
-        """
-        Devuelve el `user_id` del usuario actualmente autenticado
-        leyendo y decodificando la cookie `auth_token`.
-        Si el token no existe, está vencido o es inválido, retorna None.
-        """
-        token = rx.Cookie(name="auth_token", secure=False, same_site="lax")
-        if not token or "." not in token:
-            return None
+    current_user_id: int | None = None
 
+    @rx.event
+    def load_current_user(self):
         try:
+            # Obtener el token desde la cookie (no desde client_storage)
+            token = rx.Cookie(name="auth_token", secure=False, same_site="lax")
+            if not token or "." not in token:
+                return
+
             payload = jwt.decode(
                 token,
                 os.environ["JWT_SECRET_KEY"],
                 algorithms=["HS256"],
             )
-            return payload.get("id")
+            self.current_user_id = payload.get("id")
         except jwt.ExpiredSignatureError:
-            # Token expirado
-            return None
-        except Exception:
-            # Token malformado u otro error
-            return None
+            self.current_user_id = None
+        except Exception as e:
+            self.current_user_id = None
+
+
     # ==========================
     # --- Estado general de preguntas y formulario ---
     # ==========================
@@ -414,41 +384,97 @@ class QuestionsState(rx.State):
     # --- Publicar respuesta ---
     # ==========================
     @rx.event
-    def post_answer(self):
-        # 1. Debe haber texto y pregunta seleccionada
+    def post_answer(self, user_id: int):
+        print("[DEBUG] Entrando a post_answer")
+        print(f"[DEBUG] answer_body: {self.answer_body}")
+        print(f"[DEBUG] selected_question_id: {self.selected_question_id}")
+
         if not self.answer_body or not self.selected_question_id:
+            print("[WARN] Campos vacíos: respuesta o pregunta no seleccionada")
             return
 
-        # 2. Intenta obtener el user_id directamente del Login.logged_user_data
-        login_data = Login.logged_user_data
-        try:
-            user_id = login_data.get("user_id", None)
-        except Exception:
-            user_id = None
+        print(f"[DEBUG] user_id: {user_id} (type: {type(user_id)})")
 
-        if not user_id:
-            print(f"[DEBUG] No hay user_id en Login.logged_user_data: {login_data}")
+        # Validación robusta
+        if user_id is None or str(user_id).lower() in ["none", "null", ""]:
+            print("[ERROR] user_id es inválido. Redirigiendo a login.")
             return rx.redirect("/login", replace=True)
 
-        # 3. Guarda la respuesta
         with rx.session() as session:
-            new_answer = Answers(
-                body=self.answer_body,
-                question_id=self.selected_question_id,
-                user_id=user_id,
-                created_at=datetime.datetime.now(),
-            )
-            session.add(new_answer)
-            session.commit()
+            try:
+                new_answer = Answers(
+                    body=self.answer_body,
+                    question_id=self.selected_question_id,
+                    user_id=user_id,
+                    created_at=datetime.datetime.now(),
+                )
+                session.add(new_answer)
+                session.commit()
+            except Exception as e:
+                print(f"[ERROR] Falló la inserción en DB: {e}")
+                session.rollback()
+                return
 
-            # Limpia textarea y recarga respuestas
             self.answer_body = ""
+
             answers = session.exec(
                 select(Answers).where(
                     Answers.question_id == self.selected_question_id
                 )
             ).all()
+
             for answer in answers:
                 if hasattr(answer, "created_at"):
                     answer.created_at = self._format_datetime(answer.created_at)
+
             self.answers = list(answers)
+            print("[DEBUG] Respuesta guardada exitosamente")
+
+            print("[WARN] Campos vacíos: respuesta o pregunta no seleccionada")
+            return
+
+        login_data = Login.logged_user_data
+        print(f"[DEBUG] login_data: {login_data}")
+
+        try:
+            user_id = login_data["user_id"]
+        except Exception as e:
+            print(f"[ERROR] No se pudo obtener user_id: {e}")
+            return rx.redirect("/login", replace=True)
+
+        print(f"[DEBUG] user_id: {user_id} (type: {type(user_id)})")
+
+        # Validación robusta
+        if user_id is None or str(user_id).lower() in ["none", "null", ""]:
+            print("[ERROR] user_id es inválido. Redirigiendo a login.")
+            return rx.redirect("/login", replace=True)
+
+        with rx.session() as session:
+            try:
+                new_answer = Answers(
+                    body=self.answer_body,
+                    question_id=self.selected_question_id,
+                    user_id=user_id,
+                    created_at=datetime.datetime.now(),
+                )
+                session.add(new_answer)
+                session.commit()
+            except Exception as e:
+                print(f"[ERROR] Falló la inserción en DB: {e}")
+                session.rollback()
+                return
+
+            self.answer_body = ""
+
+            answers = session.exec(
+                select(Answers).where(
+                    Answers.question_id == self.selected_question_id
+                )
+            ).all()
+
+            for answer in answers:
+                if hasattr(answer, "created_at"):
+                    answer.created_at = self._format_datetime(answer.created_at)
+
+            self.answers = list(answers)
+            print("[DEBUG] Respuesta guardada exitosamente")

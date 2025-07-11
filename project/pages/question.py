@@ -45,7 +45,7 @@ def question_page() -> rx.Component:
                 ),
                 rx.button(
                     "Responder",
-                    on_click=QuestionsState.post_answer,
+                    on_click=QuestionsState.post_answer(Login.logged_user_data["user_id"]),
                     disabled=~QuestionsState.answer_body.bool()
                 )
             ),
