@@ -4,6 +4,7 @@ import reflex as rx
 from .pages.logged_index import logged_index
 from .pages.signup import signup
 from .pages.login import login
+from .pages.profile import profile_page
 from .pages.new_question import new_question
 from .pages.question import question_page
 from .theme import Custom_theme
@@ -337,12 +338,21 @@ app = rx.App(theme=rx.theme(
     dark=Custom_theme().dark_colors(),
     appearance="inherit",
 ))
-app.add_page(project, title="Página de inicio", route="/", on_load=QuestionsState.load_questions)
-app.add_page(new_question, title="Nueva pregunta", route="/new_question")
+app.add_page(
+    project,
+    title="Página de inicio",
+    route="/",
+    on_load=QuestionsState.load_questions
+)
+app.add_page(
+    new_question,
+    title="Nueva pregunta",
+    route="/new_question"
+)
 app.add_page(
     question_page,
     title="Detalle de pregunta", 
-    route="/question/[question_id]",  # Usar corchetes para parámetros dinámicos
+    route="/question/[question_id]",
     on_load=QuestionsState.load_questions
 )
 app.add_page(
@@ -351,5 +361,16 @@ app.add_page(
     route="/dashboard",
     on_load=QuestionsState.load_questions,
 )
-app.add_page(login, title="Iniciar sesión", route="/login")
-app.add_page(signup, title="Crear nueva cuenta", route="/sign_up")
+app.add_page(profile_page,
+    title="Perfil de usuario | [username]",
+    route="/profile/[user_id]",
+    on_load=Login.load_profile,
+)
+app.add_page(login,
+    title="Iniciar sesión",
+    route="/login"
+)
+app.add_page(signup,
+    title="Crear nueva cuenta",
+    route="/sign_up"
+)

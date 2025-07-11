@@ -7,13 +7,9 @@ def question_page() -> rx.Component:
         rx.cond(
             QuestionsState.question,
             rx.vstack(
-                rx.heading(QuestionsState.question.title, size="3"),
+                rx.heading(QuestionsState.question.title),
                 rx.text(QuestionsState.question.body),
-                rx.text(f"Preguntado por: {QuestionsState.question_username}"),
-                # Etiquetas
-                rx.hstack(
-                    rx.foreach(QuestionsState.tags, lambda tag: rx.badge(tag.tag_name)),
-                ),
+                rx.text("Preguntado por: ", rx.link(QuestionsState.question_user['username'], href=f'/profile/{QuestionsState.question_user['user_id']}'), size="3", color="gray"),
                 rx.divider(),
 
                 # Respuestas
@@ -22,9 +18,9 @@ def question_page() -> rx.Component:
                     QuestionsState.answers,
                     rx.foreach(
                         QuestionsState.answers,
-                        lambda answer: rx.box(
+                        lambda answer, i: rx.box(
                             rx.text(answer.body),
-                            rx.text(f"Respondido por: {answer.user_id}", size="3", color="gray"),
+                            rx.text("Respondido por: ", rx.link(QuestionsState.answers_user[i]['username'], href=f'/profile/{QuestionsState.answers_user[i]['user_id']}'), size="3", color="gray"),
                             bg="#fafafa",
                             border_radius="8px",
                             padding="8px",

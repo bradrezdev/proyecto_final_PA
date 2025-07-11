@@ -8,8 +8,8 @@ from sqlmodel import func
 
 class Answers(rx.Model, table=True):
     answer_id: int = Field(default=None, primary_key=True)
-    question_id: int  # FK to questions
-    user_id: int      # FK to users
+    question_id: int = Field(foreign_key="questions.question_id")  # FK to questions
+    user_id: int = Field(foreign_key="users.user_id")      # FK to users
     body: str
     created_at: datetime = Field(
     default_factory=lambda: datetime.now(timezone.utc),

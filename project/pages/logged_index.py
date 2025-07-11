@@ -58,6 +58,7 @@ def logged_index() -> rx.Component:
                 border_radius="20px",
                 spacing="3",
                 padding="20px",
+                on_click=lambda: rx.redirect(f"/profile/{Login.logged_user_data.get('user_id')}"),
                 width="36vw",
             ),
 
@@ -117,7 +118,7 @@ def logged_index() -> rx.Component:
                             padding="22px",
                             direction="column",
                             spacing="2",
-                            on_click=lambda: rx.redirect(f"/question/{question.question_id}"),  # Usar question.question_id
+                            on_click=lambda: rx.redirect(f"/question/{question.question_id}"),
                         )
                     ),
                     direction="column",
@@ -254,7 +255,7 @@ def logged_index() -> rx.Component:
             ),
 
         # Propiedades contenedor principal vstack
-        on_mount=[Login.load_logged_user],
+        on_mount=[Login.load_logged_user, Login.load_profile],
         height="100vh",
         max_width="1920",
         width="100%",

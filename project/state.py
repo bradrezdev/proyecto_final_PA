@@ -160,7 +160,66 @@ class Login(rx.State):
                 "total_stars": user.total_stars,
                 "title": user.get_title(),
             }
-        
+
+    profile_data: dict = {}
+    edit_username: str = ""
+    edit_email: str = ""
+
+    @rx.event
+    def load_profile(self):
+        """Carga el detalle del perfil según la URL."""
+        user_id = self.router.page.params.get("user_id")
+        if not user_id:
+            self.profile_data = {}
+            return
+
+        with rx.session() as session:
+            user = session.exec(select(Users).where(Users.user_id == int(user_id))).first()
+            if user:
+                # Guardamos los datos que queremos mostrar/editar
+                self.profile_data = {
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "email": user.email,
+                    "total_stars": user.total_stars,
+                    "title": user.get_title(),
+                }
+                # Cuando entras a tu propio perfil, precarga inputs
+                logged_id = self.logged_user_data.get("user_id")
+                if str(logged_id) == str(user.user_id):
+                    self.edit_username = user.username
+                    self.edit_email = user.email
+            else:
+                self.profile_data = {}
+
+    @rx.event
+    def set_edit_username(self, value):
+        self.edit_username = value
+
+    @rx.event
+    def set_edit_email(self, value):
+        self.edit_email = value
+
+    @rx.event
+    def update_profile(self):
+        """Actualiza el perfil SOLO si es el usuario propio."""
+        user_id = self.logged_user_data.get("user_id")
+        # Solo puedes actualizar tu propio perfil
+        if not user_id or str(user_id) != str(self.profile_data.get("user_id")):
+            return rx.redirect("/login", replace=True)
+
+        with rx.session() as session:
+            user = session.exec(select(Users).where(Users.user_id == user_id)).first()
+            if user:
+                user.username = self.edit_username or user.username
+                user.email = self.edit_email or user.email
+                session.add(user)
+                session.commit()
+                # Refresca los datos globales y de perfil
+                self.load_logged_user()
+                self.load_profile()
+                return rx.redirect(f"/profile/{user_id}", replace=True)
+
 class SearchUIState(rx.State):
     show_search_box: bool = False
 
@@ -179,27 +238,6 @@ class SearchState(rx.State):
             self.search_term = ""
 
 class QuestionsState(rx.State):
-    current_user_id: int | None = None
-
-    @rx.event
-    def load_current_user(self):
-        try:
-            # Obtener el token desde la cookie (no desde client_storage)
-            token = rx.Cookie(name="auth_token", secure=False, same_site="lax")
-            if not token or "." not in token:
-                return
-
-            payload = jwt.decode(
-                token,
-                os.environ["JWT_SECRET_KEY"],
-                algorithms=["HS256"],
-            )
-            self.current_user_id = payload.get("id")
-        except jwt.ExpiredSignatureError:
-            self.current_user_id = None
-        except Exception as e:
-            self.current_user_id = None
-
 
     # ==========================
     # --- Estado general de preguntas y formulario ---
@@ -340,7 +378,6 @@ class QuestionsState(rx.State):
     # ==========================
     # --- Cargar detalle de pregunta (con tags y respuestas) ---
     # ==========================
-# --- Cargar detalle de pregunta (sin argumento) ---
     @rx.event
     def load_question_detail(self):
         """Carga el detalle de la pregunta cuyo ID viene en la URL."""
@@ -351,53 +388,52 @@ class QuestionsState(rx.State):
     # ==========================
     # --- Cargar detalle de pregunta (con tags y respuestas) ---
     # ==========================
+    question_user: dict = {}
+    answers_user: list[dict] = []
+    
     @rx.event
     def load_question(self, question_id: int):
-        """Carga una pregunta por ID junto con sus tags y respuestas."""
         with rx.session() as session:
-            q = session.exec(
-                select(Questions).where(Questions.question_id == question_id)
-            ).first()
+            # Carga la pregunta y su usuario
+            q = session.exec(select(Questions).where(Questions.question_id == question_id)).first()
             if q:
-                q.created_at = self._format_datetime(q.created_at)
-                # --- Buscar el username ---
-                user = session.exec(select(Users).where(Users.user_id == q.user_id)).first()
-                self.question_username = user.username if user else "Desconocido"
-                # --- Guardar el objeto Questions directamente ---
                 self.question = q
-                self.selected_question_id = question_id
-            else:
-                self.question = None
-                self.question_username = ""
+                # Usuario que hizo la pregunta
+                user = session.exec(select(Users).where(Users.user_id == q.user_id)).first()
+                self.question_user = {
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "email": user.email,
+                    "total_stars": user.total_stars,
+                    "title": user.get_title(),
+                } if user else {}
 
-            # Buscar respuestas asociadas
-            answers = session.exec(
-                select(Answers).where(Answers.question_id == question_id)
-            ).all()
-            # Ajustar fechas de respuestas si tienen fecha
-            for answer in answers:
-                if hasattr(answer, "created_at"):
-                    answer.created_at = self._format_datetime(answer.created_at)
+            # Carga respuestas y usuarios de cada respuesta
+            answers = session.exec(select(Answers).where(Answers.question_id == question_id)).all()
             self.answers = list(answers)
+            # Aquí el truco: armar la lista de usuarios de respuestas
+            self.answers_user = []
+            for answer in answers:
+                ans_user = session.exec(select(Users).where(Users.user_id == answer.user_id)).first()
+                self.answers_user.append({
+                    "user_id": ans_user.user_id if ans_user else None,
+                    "username": ans_user.username if ans_user else "Desconocido",
+                    "email": ans_user.email if ans_user else "",
+                    "total_stars": ans_user.total_stars if ans_user else 0,
+                    "title": ans_user.get_title() if ans_user else "",
+                })
 
     # ==========================
     # --- Publicar respuesta ---
     # ==========================
     @rx.event
     def post_answer(self, user_id: int):
-        print("[DEBUG] Entrando a post_answer")
-        print(f"[DEBUG] answer_body: {self.answer_body}")
-        print(f"[DEBUG] selected_question_id: {self.selected_question_id}")
 
         if not self.answer_body or not self.selected_question_id:
-            print("[WARN] Campos vacíos: respuesta o pregunta no seleccionada")
             return
-
-        print(f"[DEBUG] user_id: {user_id} (type: {type(user_id)})")
-
+        
         # Validación robusta
         if user_id is None or str(user_id).lower() in ["none", "null", ""]:
-            print("[ERROR] user_id es inválido. Redirigiendo a login.")
             return rx.redirect("/login", replace=True)
 
         with rx.session() as session:
@@ -411,7 +447,6 @@ class QuestionsState(rx.State):
                 session.add(new_answer)
                 session.commit()
             except Exception as e:
-                print(f"[ERROR] Falló la inserción en DB: {e}")
                 session.rollback()
                 return
 
@@ -428,53 +463,11 @@ class QuestionsState(rx.State):
                     answer.created_at = self._format_datetime(answer.created_at)
 
             self.answers = list(answers)
-            print("[DEBUG] Respuesta guardada exitosamente")
-
-            print("[WARN] Campos vacíos: respuesta o pregunta no seleccionada")
             return
 
         login_data = Login.logged_user_data
-        print(f"[DEBUG] login_data: {login_data}")
 
         try:
-            user_id = login_data["user_id"]
+            username = login_data["username"]
         except Exception as e:
-            print(f"[ERROR] No se pudo obtener user_id: {e}")
             return rx.redirect("/login", replace=True)
-
-        print(f"[DEBUG] user_id: {user_id} (type: {type(user_id)})")
-
-        # Validación robusta
-        if user_id is None or str(user_id).lower() in ["none", "null", ""]:
-            print("[ERROR] user_id es inválido. Redirigiendo a login.")
-            return rx.redirect("/login", replace=True)
-
-        with rx.session() as session:
-            try:
-                new_answer = Answers(
-                    body=self.answer_body,
-                    question_id=self.selected_question_id,
-                    user_id=user_id,
-                    created_at=datetime.datetime.now(),
-                )
-                session.add(new_answer)
-                session.commit()
-            except Exception as e:
-                print(f"[ERROR] Falló la inserción en DB: {e}")
-                session.rollback()
-                return
-
-            self.answer_body = ""
-
-            answers = session.exec(
-                select(Answers).where(
-                    Answers.question_id == self.selected_question_id
-                )
-            ).all()
-
-            for answer in answers:
-                if hasattr(answer, "created_at"):
-                    answer.created_at = self._format_datetime(answer.created_at)
-
-            self.answers = list(answers)
-            print("[DEBUG] Respuesta guardada exitosamente")
