@@ -119,7 +119,7 @@ class Login(rx.State):
 
                     self.auth_token = token
 
-                    return rx.redirect("/dashboard", replace=True)
+                    return rx.redirect("/", replace=True)
                 else:
                     print("Correo electrónico no encontrado o contraseña incorrecta.")
                     return rx.redirect("/login", replace=True)
@@ -219,6 +219,13 @@ class Login(rx.State):
                 self.load_logged_user()
                 self.load_profile()
                 return rx.redirect(f"/profile/{user_id}", replace=True)
+            
+    @rx.event
+    def logout(self):
+        """Cierra sesión y limpia el token."""
+        self.auth_token = ""
+        self.logged_user_data = {}
+        return rx.redirect("/login", replace=True)
 
 class SearchUIState(rx.State):
     show_search_box: bool = False
@@ -305,16 +312,23 @@ class QuestionsState(rx.State):
     # --- Publicar nueva pregunta ---
     # ==========================
     @rx.event
-    def publish_question(self):
-        """Guarda una nueva pregunta con sus tags, limpia el formulario y redirige al dashboard."""
+    def publish_question(self, user_id: int):
+
+        print(f"[DEBUG] user_id (argument): {user_id}")
+
+        if user_id is None or str(user_id).lower() in ["none", "null", ""]:
+            print(f"[ERROR] user_id inválido: {user_id}. Redirigiendo a login.")
+            return rx.redirect("/login", replace=True)
+
+        """
+        Guarda una nueva pregunta con sus tags, limpia el formulario y redirige al dashboard.
+        """
         with rx.session() as session:
             # 1. Crear la pregunta
-            user_id = None  # Aquí deberías obtener el user_id del usuario logueado
-
             new_question = Questions(
                 title=self.title,
                 body=self.body,
-                user_id=self.user_id,
+                user_id=user_id,
             )
             session.add(new_question)
             session.commit()
@@ -338,11 +352,14 @@ class QuestionsState(rx.State):
                 session.add(question_tag)
             session.commit()
 
-            # 3. Limpiar campos y redirigir
+            # 3. Obtiene el ID de la pregunta recién creada
+            new_question_id = new_question.question_id
+
+            # 4. Limpiar campos y redirigir
             self.title = ""
             self.body = ""
             self.tags_input = ""
-            return rx.redirect("/dashboard", replace=True)
+            return rx.redirect(f"/question/{new_question_id}", replace=True)
 
     # ==========================
     # --- Cargar todas las preguntas (lista general) ---
@@ -353,6 +370,23 @@ class QuestionsState(rx.State):
         self.is_loading = True
         with rx.session() as session:
             results = session.exec(select(Questions)).all()
+            # Ajustar fechas
+            for question in results:
+                question.created_at = self._format_datetime(question.created_at)
+            self.questions = list(results)
+            self.is_loading = False
+
+    # ==========================
+    # --- Cargar todas las preguntas que hizo el usuario ---
+    # ==========================
+    @rx.event
+    def load_user_questions(self, user_id: int):
+        """Carga todas las preguntas que hizo un usuario específico."""
+        self.is_loading = True
+        with rx.session() as session:
+            results = session.exec(
+                select(Questions).where(Questions.user_id == user_id)
+            ).all()
             # Ajustar fechas
             for question in results:
                 question.created_at = self._format_datetime(question.created_at)
@@ -393,6 +427,7 @@ class QuestionsState(rx.State):
     
     @rx.event
     def load_question(self, question_id: int):
+        self.selected_question_id = question_id
         with rx.session() as session:
             # Carga la pregunta y su usuario
             q = session.exec(select(Questions).where(Questions.question_id == question_id)).first()
@@ -428,14 +463,22 @@ class QuestionsState(rx.State):
     # ==========================
     @rx.event
     def post_answer(self, user_id: int):
+        print("[DEBUG] Entrando a post_answer()")
+        print(f"[DEBUG] answer_body: {self.answer_body}")
+        print(f"[DEBUG] selected_question_id: {self.selected_question_id}")
+        print(f"[DEBUG] user_id (argument): {user_id}")
 
+        # 1. Validación de campos obligatorios
         if not self.answer_body or not self.selected_question_id:
+            print("[WARN] Campos vacíos: respuesta o pregunta no seleccionada")
             return
-        
-        # Validación robusta
+
+        # 2. Validación robusta del user_id
         if user_id is None or str(user_id).lower() in ["none", "null", ""]:
+            print(f"[ERROR] user_id inválido: {user_id}. Redirigiendo a login.")
             return rx.redirect("/login", replace=True)
 
+        # 3. Intenta guardar la respuesta en la base de datos
         with rx.session() as session:
             try:
                 new_answer = Answers(
@@ -446,28 +489,52 @@ class QuestionsState(rx.State):
                 )
                 session.add(new_answer)
                 session.commit()
+                print("[DEBUG] Respuesta guardada correctamente en la base de datos")
             except Exception as e:
+                print(f"[ERROR] Falló la inserción en la base de datos: {e}")
                 session.rollback()
                 return
 
-            self.answer_body = ""
+        # 4. Limpia el campo y recarga respuestas
+        self.answer_body = ""
+        print("[DEBUG] answer_body limpiado")
 
-            answers = session.exec(
-                select(Answers).where(
-                    Answers.question_id == self.selected_question_id
-                )
-            ).all()
+        answers = session.exec(
+            select(Answers).where(
+                Answers.question_id == self.selected_question_id
+            )
+        ).all()
+        print(f"[DEBUG] Se encontraron {len(answers)} respuestas tras guardar")
 
-            for answer in answers:
-                if hasattr(answer, "created_at"):
-                    answer.created_at = self._format_datetime(answer.created_at)
+        for answer in answers:
+            answer.display_created_at = self._format_datetime(answer.created_at)
 
-            self.answers = list(answers)
-            return
+        self.answers = list(answers)
+        print("[DEBUG] self.answers actualizado")
 
-        login_data = Login.logged_user_data
+        # 5. Actualiza la lista de usuarios de respuestas
+        self.answers_user = []
+        for answer in self.answers:
+            ans_user = session.exec(select(Users).where(Users.user_id == answer.user_id)).first()
+            self.answers_user.append({
+                "user_id": ans_user.user_id if ans_user else None,
+                "username": ans_user.username if ans_user else "Desconocido",
+                "email": ans_user.email if ans_user else "",
+                "total_stars": ans_user.total_stars if ans_user else 0,
+                "title": ans_user.get_title() if ans_user else "",
+            })
+        print("[DEBUG] self.answers_user actualizado después de post_answer")
 
-        try:
-            username = login_data["username"]
-        except Exception as e:
-            return rx.redirect("/login", replace=True)
+class Stars(rx.State):
+
+    @rx.event
+    def gain_stars(self, user_id: int, stars: int = 1):
+        """Aumenta el total de estrellas del usuario que respondió la respuesta dada."""
+
+        with rx.session() as session:
+            user = session.exec(select(Users).where(Answers.user_id == user_id)).first()
+            if user:
+                user.total_stars += stars
+                session.add(user)
+                session.commit()
+                print(f"[DEBUG] Estrellas ganadas: {stars} para el usuario {user.username}")

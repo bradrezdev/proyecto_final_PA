@@ -13,7 +13,11 @@ def signup() -> rx.Component:
         # Contenedor izquierdo | Formulario
         rx.vstack(
             
-            rx.image(src="/logotipo.png", width="200px", height="auto"),
+            rx.button(
+                rx.image(src="/logotipo.png", width="200px", height="auto"),
+            bg="none",
+            on_click=lambda: rx.redirect("/"),
+            ),
 
             # Formulario de inicio de sesión.
             rx.form(
