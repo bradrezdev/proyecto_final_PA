@@ -7,14 +7,10 @@ import jwt
 import os
 import datetime
 from dotenv import load_dotenv
-from typing import List
 from sqlmodel import select
 from .models.users import Users
-from .models.titles import Titles
-from .models.tags import Tags
 from .models.questions import Questions
 from .models.answers import Answers
-from .models.question_tag import QuestionTag
 
 
 class State(rx.State):
@@ -164,8 +160,6 @@ class Login(rx.State):
                 "user_id": user.user_id,
                 "username": user.username,
                 "email": user.email,
-                "total_stars": user.total_stars,
-                "title": user.get_title(),
             }
 
     profile_data: dict = {}
@@ -188,8 +182,6 @@ class Login(rx.State):
                     "user_id": user.user_id,
                     "username": user.username,
                     "email": user.email,
-                    "total_stars": user.total_stars,
-                    "title": user.get_title(),
                 }
                 # Cuando entras a tu propio perfil, precarga inputs
                 logged_id = self.logged_user_data.get("user_id")
@@ -259,7 +251,6 @@ class QuestionsState(rx.State):
     # Pregunta nueva (formulario)
     title: str = ""
     body: str = ""
-    tags_input: str = ""
     
     # Estado de carga y lista de preguntas
     is_loading: bool = False
@@ -271,7 +262,6 @@ class QuestionsState(rx.State):
     selected_question_id: int | None = None  # Cambiar question_id por selected_question_id
     question: Questions | None = None        # Objeto pregunta seleccionada
     question_username: str = ""       # Agregar campo separado para username
-    tags: list[Tags] = []             # Lista de tags de la pregunta seleccionada
     answers: list[Answers] = []       # Respuestas de la pregunta seleccionada
 
     # Respuesta nueva (formulario)
@@ -306,11 +296,6 @@ class QuestionsState(rx.State):
         self.body = input_body
 
     @rx.event
-    def setTagsInput(self, input_tags: str):
-        """Actualiza el input de etiquetas para pregunta nueva."""
-        self.tags_input = input_tags
-
-    @rx.event
     def set_answer_body(self, body: str):
         """Actualiza el cuerpo de la respuesta a publicar."""
         self.answer_body = body
@@ -341,31 +326,12 @@ class QuestionsState(rx.State):
             session.commit()
             print(f"Pregunta publicada: {new_question.title}")
 
-            # 2. Procesar etiquetas (tags)
-            tags = [t.strip() for t in self.tags_input.split(",") if t.strip()]
-            for name in tags:
-                tag = session.exec(
-                    select(Tags).where(Tags.tag_name == name)
-                ).first()
-                if not tag:
-                    tag = Tags(tag_name=name)
-                    session.add(tag)
-                    session.commit()
-                # Relacionar pregunta y etiqueta
-                question_tag = QuestionTag(
-                    question_id=new_question.question_id,
-                    tag_id=tag.tag_id
-                )
-                session.add(question_tag)
-            session.commit()
-
-            # 3. Obtiene el ID de la pregunta recién creada
+            # 2. Obtiene el ID de la pregunta recién creada
             new_question_id = new_question.question_id
 
             # 4. Limpiar campos y redirigir
             self.title = ""
             self.body = ""
-            self.tags_input = ""
             return rx.redirect(f"/question/{new_question_id}", replace=True)
 
     # ==========================
@@ -423,7 +389,7 @@ class QuestionsState(rx.State):
         self.search_questions(value)
 
     # ==========================
-    # --- Cargar detalle de pregunta (con tags y respuestas) ---
+    # --- Cargar detalle de pregunta ---
     # ==========================
     @rx.event
     def load_question_detail(self):
@@ -433,7 +399,7 @@ class QuestionsState(rx.State):
             self.load_question(int(question_id))
 
     # ==========================
-    # --- Cargar detalle de pregunta (con tags y respuestas) ---
+    # --- Cargar preguntas ---
     # ==========================
     question_user: dict = {}
     answers_user: list[dict] = []
@@ -452,8 +418,6 @@ class QuestionsState(rx.State):
                     "user_id": user.user_id,
                     "username": user.username,
                     "email": user.email,
-                    "total_stars": user.total_stars,
-                    "title": user.get_title(),
                 } if user else {}
 
             # Carga respuestas y usuarios de cada respuesta
@@ -467,8 +431,6 @@ class QuestionsState(rx.State):
                     "user_id": ans_user.user_id if ans_user else None,
                     "username": ans_user.username if ans_user else "Desconocido",
                     "email": ans_user.email if ans_user else "",
-                    "total_stars": ans_user.total_stars if ans_user else 0,
-                    "title": ans_user.get_title() if ans_user else "",
                 })
 
     # ==========================
@@ -533,21 +495,5 @@ class QuestionsState(rx.State):
                 "user_id": ans_user.user_id if ans_user else None,
                 "username": ans_user.username if ans_user else "Desconocido",
                 "email": ans_user.email if ans_user else "",
-                "total_stars": ans_user.total_stars if ans_user else 0,
-                "title": ans_user.get_title() if ans_user else "",
             })
         print("[DEBUG] self.answers_user actualizado después de post_answer")
-
-class Stars(rx.State):
-
-    @rx.event
-    def gain_stars(self, user_id: int, stars: int = 1):
-        """Aumenta el total de estrellas del usuario que respondió la respuesta dada."""
-
-        with rx.session() as session:
-            user = session.exec(select(Users).where(Answers.user_id == user_id)).first()
-            if user:
-                user.total_stars += stars
-                session.add(user)
-                session.commit()
-                print(f"[DEBUG] Estrellas ganadas: {stars} para el usuario {user.username}")

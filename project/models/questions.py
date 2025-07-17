@@ -2,7 +2,6 @@
 
 import reflex as rx
 from sqlmodel import Field
-from typing import Optional
 from datetime import datetime, timezone
 from sqlmodel import func
 
@@ -11,7 +10,7 @@ class Questions(rx.Model, table=True):
     user_id: int = Field(foreign_key="users.user_id")   # Relación con usuario
     title: str = Field(index=True)
     body: str
-    tag_id: str = Field(default=None, foreign_key="tags.tag_id")  # Relación con tags
+    #tag_id: str = Field(default=None, foreign_key="tags.tag_id")  # Relación con tags
     created_at: datetime = Field(
     default_factory=lambda: datetime.now(timezone.utc),
     sa_column_kwargs={"server_default": func.now()},

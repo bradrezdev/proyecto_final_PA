@@ -2,7 +2,6 @@ import reflex as rx
 from ..header_layout import header
 from ..state import Login
 from ..state import QuestionsState
-from ..state import Stars
 from ..theme import Custom_theme
 
 def question_page() -> rx.Component:
