@@ -115,12 +115,6 @@ def signup() -> rx.Component:
                         spacing="2"
                     ),
 
-                    rx.hstack(
-
-                        rx.checkbox("Al registrar los detalles de tu cuenta, aceptas nuestros términos y condiciones.", size="2"),
-
-                    ),
-
                     rx.button(
                         "Registrarse",
                         type="submit",

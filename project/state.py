@@ -409,6 +409,12 @@ class QuestionsState(rx.State):
                     filtered.append(question)
             self.questions = filtered
 
+    search_term: str = ""
+    @rx.event
+    def set_search_term(self, value: str):
+        self.search_term = value
+        self.search_questions(value)
+
     # ==========================
     # --- Cargar detalle de pregunta (con tags y respuestas) ---
     # ==========================

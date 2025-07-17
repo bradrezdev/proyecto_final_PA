@@ -38,12 +38,17 @@ def project() -> rx.Component:
                 rx.button("Nueva pregunta", on_click=lambda: rx.redirect("/new_question"), bg=rx.color_mode_cond(
                     light=Custom_theme().light_colors()["primary"],
                     dark=Custom_theme().dark_colors()["primary"],
-                ), height="40px", width="12%", border_radius="8px"),
-                justify="between",
-                margin="4% 0 2% 0",
-                width="100%",
+                ),
+                height="40px",
+                width="12%",
+                border_radius="12px",
+                cursor="pointer",
             ),
-            rx.hstack(
+            justify="between",
+            margin="4% 0 2% 0",
+            width="100%",
+        ),
+        rx.hstack(
                 rx.flex(
                     rx.foreach(
                         QuestionsState.questions,
@@ -66,6 +71,7 @@ def project() -> rx.Component:
                                 light=Custom_theme().light_colors()["background"],
                                 dark=Custom_theme().dark_colors()["background"]
                             ),
+                            cursor="pointer",
                             border_radius="20px",
                             padding="20px",
                             direction="column",

@@ -49,6 +49,7 @@ def profile_page():
                                 light=Custom_theme().light_colors()["primary"],
                                 dark=Custom_theme().dark_colors()["primary"],
                             ),
+                            cursor="pointer",
                             on_click=Login.update_profile),
                         align="end",
                         width="70%",
@@ -103,6 +104,7 @@ def profile_page():
                             light=Custom_theme().light_colors()["background"],
                             dark=Custom_theme().dark_colors()["background"]
                         ),
+                        cursor="pointer",
                         border_radius="20px",
                         padding="20px",
                         direction="column",

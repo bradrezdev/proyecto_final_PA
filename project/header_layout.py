@@ -10,6 +10,7 @@ def header():
                 rx.button(
                     rx.image(src="/logotipo.png", width="200px", height="auto"),
                     bg="none",
+                    cursor="pointer",
                     on_click=lambda: rx.redirect("/"),
                 ),
                 rx.flex(
@@ -21,6 +22,7 @@ def header():
                             light=Custom_theme().light_colors()["primary"],
                             dark=Custom_theme().dark_colors()["primary"]),
                         border_radius="100px",
+                        cursor="pointer",
                         width="48px",
                         height="48px",
                         margin_right="24px",
@@ -38,47 +40,87 @@ def header():
                                 z_index="99",
                             ),
                             rx.box(
-                                rx.input(
-                                    placeholder="Buscar por tema",
-                                    bg="#FFFFFF",
-                                    margin="0 auto",
-                                    padding="0 16px",
-                                    border_radius="100px",
-                                    height="48px",
-                                    width="40%",
-                                    on_change=lambda e: QuestionsState.search_questions(e),
-                                ),
-                                rx.vstack(
-                                    rx.foreach(
-                                        QuestionsState.questions,
-                                        lambda question: rx.box(
-                                            rx.text(question.title),
-                                            rx.text(question.body[:100] + "..."),
-                                            bg=rx.color_mode_cond(
-                                                light=Custom_theme().light_colors()["background"],
-                                                dark=Custom_theme().dark_colors()["background"]
-                                            ),
-                                            border_radius="20px",
-                                            width="63vw",
-                                            padding="22px",
-                                            direction="column",
-                                            spacing="2",
-                                        )
+                                rx.flex(
+                                    rx.input(
+                                        placeholder="Buscar por tema",
+                                        bg="#FFFFFF",
+
+                                        padding="0 16px",
+                                        border_radius="100px",
+                                        height="48px",
+                                        width="40%",
+                                        on_change=QuestionsState.set_search_term,
                                     ),
-                                    padding="2rem",
-                                    spacing="2",
-                                    align_items="start"
+                                    rx.icon(
+                                        "x",
+                                        on_click=[
+                                            SearchUIState.toggle_search_box,
+                                            QuestionsState.set_search_term("")
+                                        ],
+                                        cursor="pointer",
+                                        width="40px",
+                                        height="40px",
+                                        margin_left="16px",
+                                    ),
+                                    direction="row",
+                                    width="100%",
+                                    margin_bottom="32px",
+                                    justify="center",
+                                    align="center",
+                                ),
+                                rx.scroll_area(
+                                    rx.flex(
+                                        rx.cond(
+                                            QuestionsState.search_term,
+                                            rx.foreach(
+                                                QuestionsState.questions,
+                                                lambda question: rx.flex(
+                                                    rx.hstack(
+                                                        rx.heading(
+                                                            question.title,
+                                                            size="5",
+                                                        ),
+                                                        rx.moment(
+                                                            question.created_at, from_now=True,
+                                                            size="1",
+                                                        ),
+                                                        justify="between",
+                                                    ),
+                                                    rx.text(
+                                                        question.body[:400] + "..."
+                                                    ),
+                                                    bg=rx.color_mode_cond(
+                                                        light="#FFFFFF",
+                                                        dark="#000000"
+                                                    ),
+                                                    cursor="pointer",
+                                                    border_radius="20px",
+                                                    padding="20px",
+                                                    direction="column",
+                                                    spacing="3",
+                                                    on_click=[
+                                                        lambda: rx.redirect(f"/question/{question.question_id}"),
+                                                        QuestionsState.set_search_term(""),
+                                                        SearchUIState.toggle_search_box
+                                                    ]
+                                                ),
+                                            ),  # <- Cierra el flex de la pregunta
+                                        ),
+                                        margin="0 auto",
+                                        direction="column",
+                                        width="70%",
+                                        spacing="5",
+                                    ),
+                                    padding_bottom="128px",
                                 ),
                                 position="fixed",
                                 top="50%",
                                 left="50%",
                                 transform="translate(-50%, -50%)",
-                                width="95vw",
-                                height="95vh",
-                                bg="rgba(175, 175, 175, 0.3)",
-                                box_shadow="0 4px 8px rgba(175, 175, 175, 0.3)",
-                                backdrop_filter="blur(10px)",
-                                border_radius="64px",
+                                width="100vw",
+                                height="100vh",
+                                #bg="rgba(200, 200, 200, 0.6)",
+                                backdrop_filter="blur(30px)",
                                 padding_top="48px",
                                 z_index="100",
                             )
@@ -104,6 +146,7 @@ def header():
                             rx.button(
                                 "Cerrar sesión",
                                 on_click=Login.logout,
+                                cursor="pointer",
                                 bg=rx.color_mode_cond(
                                     light=Custom_theme().light_colors()["primary"],
                                     dark=Custom_theme().dark_colors()["primary"],

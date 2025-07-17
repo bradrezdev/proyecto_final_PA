@@ -64,11 +64,6 @@ def login() -> rx.Component:
                         width="25vw",
                     ),
 
-                    rx.link("Olvidé mi contraseña", href="/reset-password", color=rx.color_mode_cond(
-                        light=Custom_theme().light_colors()["primary"],
-                        dark=Custom_theme().dark_colors()["primary"]
-                    ), size="1"),
-
                     rx.button(
                         rx.text("Iniciar sesión"),
                         height="47px",

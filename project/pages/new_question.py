@@ -23,6 +23,7 @@ def new_question():
             margin_bottom="16px",
             padding_left="8px",
             width="100%",
+            required=True,
         ),
 
         # 2. Cuerpo
@@ -39,20 +40,25 @@ def new_question():
             padding="8px 0 0 8px",
             size="2",
             width="100%",
+            required=True,
         ),
 
         # 3. Botón Publicar
-        rx.button(
-            "Publicar pregunta",
-            on_click=QuestionsState.publish_question(Login.logged_user_data["user_id"]),
-            border_radius="8px",
-            bg=rx.color_mode_cond(
-                light=Custom_theme().light_colors()["primary"],
-                dark=Custom_theme().dark_colors()["primary"],
+        rx.cond(
+            QuestionsState.title.bool() & QuestionsState.body.bool(),
+            rx.button(
+                "Publicar pregunta",
+                on_click=QuestionsState.publish_question(Login.logged_user_data["user_id"]),
+                border_radius="8px",
+                bg=rx.color_mode_cond(
+                    light=Custom_theme().light_colors()["primary"],
+                    dark=Custom_theme().dark_colors()["primary"],
+                ),
+                cursor="pointer",
+                height="40px",
+                padding="10px",
+                width="15%",
             ),
-            height="40px",
-            padding="10px",
-            width="15%",
         ),
         on_mount=[
             Login.load_logged_user,  # Cargar datos del usuario logueado

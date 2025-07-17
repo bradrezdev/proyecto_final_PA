@@ -38,31 +38,45 @@ def question_page() -> rx.Component:
                 ),
                 rx.vstack(
                     # Formulario de respuesta
-                    rx.text(f"Estás respondiendo como {Login.logged_user_data['username']}"),
-                    rx.text_area(
-                        value=QuestionsState.answer_body,
-                        on_change=QuestionsState.set_answer_body,
-                        placeholder="Escribe tu respuesta...",
-                        
-                        border_radius="20px",
-                        padding="10px",
-                        width="100%",
-                        auto_height=True,
-                        min_height="100px",
-                        max_height="200px",
-                    ),
-                    rx.button(
-                        "Responder",
-                        on_click=QuestionsState.post_answer(Login.logged_user_data["user_id"]),
-                        disabled=~QuestionsState.answer_body.bool(),
-                        bg=rx.color_mode_cond(
-                            light=Custom_theme().light_colors()["primary"],
-                            dark=Custom_theme().dark_colors()["primary"],
+                    rx.cond(
+                        is_owner := Login.logged_user_data.get("user_id"),
+                        rx.vstack(
+                            rx.text(f"Estás respondiendo como {Login.logged_user_data['username']}"),
+                            rx.text_area(
+                                value=QuestionsState.answer_body,
+                                on_change=QuestionsState.set_answer_body,
+                                placeholder="Escribe tu respuesta...",
+                                
+                                border_radius="20px",
+                                padding="10px",
+                                width="100%",
+                                auto_height=True,
+                                min_height="100px",
+                                max_height="200px",
+                            ),
+                            rx.cond(
+                                QuestionsState.answer_body.bool(),
+                                rx.button(
+                                    "Responder",
+                                    on_click=QuestionsState.post_answer(Login.logged_user_data["user_id"]),
+                                    bg=rx.color_mode_cond(
+                                        light=Custom_theme().light_colors()["primary"],
+                                        dark=Custom_theme().dark_colors()["primary"],
+                                    ),
+                                    border_radius="8px",
+                                    padding="10px",
+                                    width="15%",
+                                    height="40px",
+                                ),
+                            ),
+                            width="100%",
                         ),
-                        border_radius="8px",
-                        padding="10px",
-                        width="15%",
-                        height="40px",
+                        rx.vstack(
+                            rx.text("Para responder, debes ", rx.link("iniciar sesión", href="/login", color=rx.color_mode_cond(
+                                light=Custom_theme().light_colors()["primary"],
+                                dark=Custom_theme().dark_colors()["primary"]
+                            ))),
+                        ),
                     ),
                     margin="0 auto",
                     width="100%",
@@ -70,17 +84,18 @@ def question_page() -> rx.Component:
                 margin="0 auto",
                 margin_bottom="128px",
                 width="100%",
-                on_mount=[
-                    Login.load_logged_user,
-                    QuestionsState.load_question_detail
-                ],
             ),
             rx.heading(
                 "Cargando pregunta...",
                 height="100%",
                 margin="0 auto",
             ),
+            
         ),
+        on_mount=[
+            Login.load_logged_user,
+            QuestionsState.load_question_detail
+        ],
         margin="0 auto",
         max_width="1280px",
     )
