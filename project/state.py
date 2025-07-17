@@ -79,6 +79,7 @@ class Login(rx.State):
     password: str = ""
     auth_token: str = rx.Cookie(name="auth_token", secure=False, same_site="lax")
     logged_user_data: dict = {}
+    is_logged: bool = True
 
     @rx.event
     def setEmail(self, input_email):
@@ -127,6 +128,12 @@ class Login(rx.State):
         except Exception as e:
             print(f"Error al iniciar sesión: {e}")
             return rx.redirect("/login", replace=True)
+
+    @rx.event
+    def check_login(self):
+        """Verifica si el usuario ya está logueado y redirige si es necesario"""
+        if self.auth_token:
+            self.is_logged = False
 
     @rx.event
     def load_logged_user(self):
