@@ -32,21 +32,31 @@ def project() -> rx.Component:
             # Contenedor Header | Logo + Search, Login, Signup
             header(),
 
-            rx.flex(
-                rx.heading("Últimas preguntas"),
-                rx.button("Nueva pregunta", on_click=lambda: rx.redirect("/new_question"), bg=rx.color_mode_cond(
-                    light=Custom_theme().light_colors()["primary"],
-                    dark=Custom_theme().dark_colors()["primary"],
+            rx.cond(
+                is_owner := Login.logged_user_data.get("user_id"),
+                rx.flex(
+                    rx.heading("Últimas preguntas"),
+                        rx.button("Nueva pregunta", on_click=lambda: rx.redirect("/new_question"),
+                            bg=rx.color_mode_cond(
+                            light=Custom_theme().light_colors()["primary"],
+                            dark=Custom_theme().dark_colors()["primary"],
+                            ),
+                            height="40px",
+                            width="12%",
+                            border_radius="12px",
+                            cursor="pointer",
+                        ),
+                justify="between",
+                margin="4% 0 2% 0",
+                width="100%",
                 ),
-                height="40px",
-                width="12%",
-                border_radius="12px",
-                cursor="pointer",
+                rx.flex(
+                    rx.heading("Últimas preguntas"),
+                justify="between",
+                margin="4% 0 2% 0",
+                width="100%",
+                )
             ),
-            justify="between",
-            margin="4% 0 2% 0",
-            width="100%",
-        ),
         rx.hstack(
                 rx.flex(
                     rx.foreach(
@@ -89,6 +99,7 @@ def project() -> rx.Component:
             max_width="1280px",
             margin="0 auto",
             on_mount=[
+                Login.check_login,  # Verificar si el usuario está logueado
                 Login.load_logged_user,  # Cargar datos del usuario logueado
                 Login.load_profile,  # Cargar perfil del usuario logueado
                 QuestionsState.load_questions,  # Cargar preguntas

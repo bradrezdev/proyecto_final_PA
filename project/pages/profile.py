@@ -18,7 +18,7 @@ def profile_page():
         rx.cond(
             profile_id,
             rx.vstack(
-            rx.heading("Perfil de usuario", size="4"),
+            rx.heading("Perfil de usuario", size="6"),
             rx.divider(),
             rx.cond(
                 is_owner,
@@ -49,6 +49,8 @@ def profile_page():
                                 light=Custom_theme().light_colors()["primary"],
                                 dark=Custom_theme().dark_colors()["primary"],
                             ),
+                            border_radius="12px",
+                            height="40px",
                             cursor="pointer",
                             on_click=Login.update_profile),
                         align="end",
@@ -78,8 +80,8 @@ def profile_page():
             rx.divider(),
             rx.cond(
                 is_owner,
-                rx.heading("Mis preguntas", size="3"),
-                rx.heading(f"Preguntas de {profile.get('username')}", size="3"),
+                rx.heading("Mis preguntas", size="6"),
+                rx.heading(f"Preguntas de {profile.get('username')}", size="6"),
             ),
             rx.hstack(
                 rx.foreach(
