@@ -5,7 +5,6 @@ from rxconfig import config
 from ..state import Login
 from ..state import Signup
 from ..theme import Custom_theme
-#from ..models.users import Users
 
 def signup() -> rx.Component:
     # Contenedor principal

@@ -1,7 +1,6 @@
 """Proyecto Final | Programación Avanzada | index"""
 
 import reflex as rx
-from .pages.logged_index import logged_index
 from .pages.signup import signup
 from .pages.login import login
 from .pages.profile import profile_page
@@ -86,6 +85,7 @@ def project() -> rx.Component:
                 width="100%",
                 margin_bottom="128px",
             ),
+            padding="0 20px 0 20px",
             max_width="1280px",
             margin="0 auto",
             on_mount=[
@@ -118,12 +118,6 @@ app.add_page(
     title="Detalle de pregunta", 
     route="/question/[question_id]",
     on_load=QuestionsState.load_questions
-)
-app.add_page(
-    logged_index,
-    title="Página de inicio",
-    route="/dashboard",
-    on_load=QuestionsState.load_questions,
 )
 app.add_page(profile_page,
     title="Perfil de usuario | [username]",

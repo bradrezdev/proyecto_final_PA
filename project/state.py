@@ -75,7 +75,7 @@ class Login(rx.State):
     password: str = ""
     auth_token: str = rx.Cookie(name="auth_token", secure=False, same_site="lax")
     logged_user_data: dict = {}
-    is_logged: bool = True
+    is_logged: bool = False
 
     @rx.event
     def setEmail(self, input_email):
@@ -182,6 +182,7 @@ class Login(rx.State):
                     "user_id": user.user_id,
                     "username": user.username,
                     "email": user.email,
+                    "created_at": user.created_at.strftime("%d-%m-%Y"),
                 }
                 # Cuando entras a tu propio perfil, precarga inputs
                 logged_id = self.logged_user_data.get("user_id")

@@ -14,7 +14,7 @@ def question_page() -> rx.Component:
             QuestionsState.question,
             rx.vstack(
                 rx.heading(QuestionsState.question.title),
-                rx.text(QuestionsState.question.body),
+                rx.text(QuestionsState.question.body, white_space="pre-line"),
                 rx.text("Preguntado por: ", rx.link(QuestionsState.question_user['username'], href=f'/profile/{QuestionsState.question_user['user_id']}'), size="3", color="gray"),
                 rx.divider(),
 
@@ -25,7 +25,7 @@ def question_page() -> rx.Component:
                     rx.foreach(
                         QuestionsState.answers,
                         lambda answer, i: rx.box(
-                            rx.text(answer.body),
+                            rx.text(answer.body, white_space="pre-line"),
                             rx.text("Respondido por: ", rx.link(QuestionsState.answers_user[i]['username'], href=f'/profile/{QuestionsState.answers_user[i]['user_id']}', color=rx.color_mode_cond(light=Custom_theme().light_colors()["text"], dark=Custom_theme().dark_colors()["text"])), size="3", color="gray", margin_right="16px"),
                             rx.divider(margin_top="16px"),
                             border_radius="20px",
@@ -95,6 +95,7 @@ def question_page() -> rx.Component:
             Login.load_logged_user,
             QuestionsState.load_question_detail
         ],
+        padding="0 20px 0 20px",
         margin="0 auto",
         max_width="1280px",
     )

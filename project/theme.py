@@ -5,7 +5,7 @@ class Custom_theme():
         return {
             "primary": "#0A2472",
             "secondary": "#A6E1FA",
-            "background": "#E4E4E4",
+            "background": "#F2F3F8",
             "text": "#000000",
             "border": "#0E6BA8",
         }
@@ -14,7 +14,7 @@ class Custom_theme():
         return {
             "primary": "#7C3AED",
             "secondary": "#F3E8FF",
-            "background": "#3E3E3E",
+            "background": "#1C1C1E",
             "text": "#FFFFFF",
             "border": "#D8B4FE",
         }

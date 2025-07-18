@@ -135,6 +135,7 @@ def profile_page():
             margin="0 auto",
         )
     ),
+    padding="0 20px 0 20px",
     max_width="1280px",
     margin="0 auto",
 )

@@ -65,4 +65,5 @@ def new_question():
         ],
         margin="0 auto",
         max_width="1280px",
+        padding="0 20px 0 20px",
     )
