@@ -122,7 +122,6 @@ def profile_page():
             spacing="6",
             align="start",
             width="100%",
-            #max_width="80%",
             margin="0 auto",
             margin_bottom="128px",
             on_mount=[

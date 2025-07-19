@@ -1,6 +1,7 @@
 import reflex as rx
 
 class Custom_theme():
+    # --- Colores para el modo claro ---
     def light_colors(self):
         return {
             "primary": "#0A2472",
@@ -9,7 +10,7 @@ class Custom_theme():
             "text": "#000000",
             "border": "#0E6BA8",
         }
-    
+    # --- Colores para el modo oscuro ---
     def dark_colors(self):
         return {
             "primary": "#7C3AED",

@@ -10,7 +10,7 @@ def new_question():
         # Contenedor Header | Logo + Search, Login, Signup
         header(),
 
-        rx.heading("Haz una pregunta pública", margin_bottom="32px"),
+        rx.heading("Haz una pregunta pública", size="6", margin_bottom="32px"),
 
         # 1. Input del título
         rx.text("Título de la pregunta", size="2", margin_bottom="2px"),

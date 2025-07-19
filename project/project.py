@@ -1,4 +1,5 @@
 """Proyecto Final | Programación Avanzada | index"""
+# --- La configuración de la base de datos está en rxconfig.py ---
 
 import reflex as rx
 from .pages.signup import signup
@@ -26,6 +27,7 @@ def project() -> rx.Component:
                 width="90vw"
             )
         ),
+
         # Aquí empieza todo el contenido real.
         rx.vstack(
 
@@ -99,10 +101,10 @@ def project() -> rx.Component:
             max_width="1280px",
             margin="0 auto",
             on_mount=[
-                Login.check_login,  # Verificar si el usuario está logueado
-                Login.load_logged_user,  # Cargar datos del usuario logueado
-                Login.load_profile,  # Cargar perfil del usuario logueado
-                QuestionsState.load_questions,  # Cargar preguntas
+                Login.check_login,  # Verifica si el usuario está logueado
+                Login.load_logged_user,  # Carga datos del usuario logueado
+                Login.load_profile,  # Carga perfil del usuario logueado
+                QuestionsState.load_questions,  # Carga preguntas
             ]
         ),
     )

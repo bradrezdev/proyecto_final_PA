@@ -104,7 +104,7 @@ def header():
                                                         SearchUIState.toggle_search_box
                                                     ]
                                                 ),
-                                            ),  # <- Cierra el flex de la pregunta
+                                            ),
                                         ),
                                         margin="0 auto",
                                         direction="column",
@@ -175,6 +175,7 @@ def header():
                                     border_radius="100px",
                                     width="135px",
                                     height="48px",
+                                    cursor="pointer",
                                 ),
                                 margin_left="7rem",
                                 href="/sign_up",
@@ -189,6 +190,7 @@ def header():
                                             dark=Custom_theme().dark_colors()["primary"],
                                         ),
                                     ),
+                                    cursor="pointer",
                                     bg="none",
                                     border_radius="100px",
                                     width="135px",

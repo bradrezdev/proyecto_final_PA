@@ -7,7 +7,6 @@ from ..state import Signup
 from ..theme import Custom_theme
 
 def signup() -> rx.Component:
-    # Contenedor principal
     return rx.box(
         rx.cond(
             Login.is_logged,
@@ -152,7 +151,6 @@ def signup() -> rx.Component:
                     ),
 
                     # Propiedades @Contenedor izquierdo | Formulario
-                    #bg="blue",
                     justify="center",
                     padding="4%",
                     width="50%",

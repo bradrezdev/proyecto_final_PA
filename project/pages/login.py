@@ -6,7 +6,6 @@ from ..state import Login
 from ..theme import Custom_theme
 
 def login() -> rx.Component:
-    # Contenedor principal
     return rx.box(
         rx.cond(
             Login.is_logged,
