@@ -119,4 +119,4 @@ Este proyecto está bajo la licencia MIT.
 ## 📬 Contacto
 
 ¿Dudas o sugerencias?  
-Escríbeme a [b.nunez@hotmail.es](b.nunez@hotmail.es).
+Escríbeme a [b.nunez@hotmail.es](mailto:b.nunez@hotmail.es).
