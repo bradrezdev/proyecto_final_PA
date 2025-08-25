@@ -203,13 +203,24 @@ class Login(rx.State):
     def check_login(self):
         """Verifica si el usuario ya está logueado."""
         if self.auth_token:
-            self.is_logged = True
+            # Verificar si el token es válido (no expirado)
+            payload = self._decode_jwt_token(self.auth_token)
+            if payload:
+                self.is_logged = True
+            else:
+                # Token inválido/expirado, limpiar sesión
+                self.auth_token = ""
+                self.logged_user_data = {}
+                self.is_logged = False
+        else:
+            self.is_logged = False
 
     @rx.event
     def logout(self):
         """Cierra la sesión del usuario."""
         self.auth_token = ""
         self.logged_user_data = {}
+        self.is_logged = False
         return rx.redirect("/login", replace=True)
 
     # --- Métodos de perfil ---
