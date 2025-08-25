@@ -4,3 +4,4 @@ assets/external/
 __pycache__/
 .states
 *.db
+.DS_Store
